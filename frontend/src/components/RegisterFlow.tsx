@@ -10,7 +10,7 @@ import {
   twitterHandleFromPrivyUser,
 } from "@/lib/twitter";
 import {toast} from "@/lib/toast";
-import {celebrateUsernameClaim} from "@/lib/celebrate";
+import {celebrateUsernameClaim, celebrateXLinked} from "@/lib/celebrate";
 import {useSession} from "@/hooks/useSession";
 import {useSignOut} from "@/hooks/useSignOut";
 import {ConnectButton} from "@/components/ConnectButton";
@@ -131,10 +131,12 @@ function RegisterFlowInner({x}: {x: XIdentity}) {
       const claimed = await claimPassport(clean);
       // Link the X handle on-chain with an attestation (best effort: the
       // name is already yours if this step fails, retry from the profile).
-      if (claimed.profile.social !== `x:${clean}`) {
+      let xLinked = claimed.profile.social === `x:${clean}`;
+      if (!xLinked) {
         try {
           const accessToken = x.devMode ? null : await x.getAccessToken();
           await linkX(x.devMode ? {handle: clean} : {privyAccessToken: accessToken ?? undefined});
+          xLinked = true;
         } catch (e) {
           console.error("[hushh] linking X failed", e);
           toast.error(`Claimed ${claimed.profile.name}.night, but linking X failed: ${formatError(e)}`);
@@ -142,7 +144,9 @@ function RegisterFlowInner({x}: {x: XIdentity}) {
       }
       toast.success(claimed.txId ? `Claimed @${claimed.profile.name}` : `Welcome back @${claimed.profile.name}`);
       setJustClaimed(true);
-      celebrateUsernameClaim();
+      // X handle is now the Midnight ID: bigger celebration.
+      if (xLinked) celebrateXLinked();
+      else celebrateUsernameClaim();
     } catch (e) {
       const msg = formatError(e);
       setError(msg);

@@ -5,6 +5,7 @@ import {usePrivy} from "@privy-io/react-auth";
 import {unlinkTwitter} from "@/lib/api";
 import {linkX} from "@/lib/midnight/passport";
 import {toast} from "@/lib/toast";
+import {celebrateXLinked} from "@/lib/celebrate";
 import {formatError} from "@/lib/errors";
 import {useSession} from "@/hooks/useSession";
 import {TWITTER_USERNAME_RE, twitterHandleFromPrivyUser} from "@/lib/twitter";
@@ -42,6 +43,7 @@ function ConnectTwitterCardInner({className = "", x}: {className?: string; x: XS
       const token = x.devMode ? null : await x.getAccessToken();
       const r = await linkX(x.devMode ? {handle} : {privyAccessToken: token ?? undefined});
       toast.success(`Linked @${r.handle} to ${hushUser?.username}.night`);
+      celebrateXLinked();
     } catch (e) {
       toast.error(formatError(e));
     } finally {

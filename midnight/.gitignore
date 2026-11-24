@@ -1,5 +1,5 @@
 node_modules/
-contracts/managed/
+# compiled contracts are committed: the web build needs them and they must match the deployed verifier keys
 midnight-level-db/
 infra/.env
 .secrets/

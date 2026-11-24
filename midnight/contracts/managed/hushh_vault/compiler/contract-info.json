@@ -1,0 +1,260 @@
+{
+  "compiler-version": "0.36.1",
+  "compiler-commit": "7fa3a117c5e7efe9d2c51da04263e5f0b3509144",
+  "language-version": "0.28.0",
+  "runtime-version": "0.21.0",
+  "circuits": [
+    {
+      "name": "owner_key",
+      "pure": true,
+      "proof": false,
+      "arguments": [
+        {
+          "name": "sk",
+          "type": {
+            "type-name": "Bytes",
+            "length": 32
+          }
+        }
+      ],
+      "result-type": {
+        "type-name": "Field"
+      }
+    },
+    {
+      "name": "note_commitment",
+      "pure": true,
+      "proof": false,
+      "arguments": [
+        {
+          "name": "owner",
+          "type": {
+            "type-name": "Field"
+          }
+        },
+        {
+          "name": "rho",
+          "type": {
+            "type-name": "Field"
+          }
+        }
+      ],
+      "result-type": {
+        "type-name": "Field"
+      }
+    },
+    {
+      "name": "deposit",
+      "pure": false,
+      "proof": true,
+      "arguments": [
+        {
+          "name": "commitment",
+          "type": {
+            "type-name": "Field"
+          }
+        },
+        {
+          "name": "amount",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 18446744073709551615
+          }
+        },
+        {
+          "name": "ct",
+          "type": {
+            "type-name": "Struct",
+            "name": "SealedNote",
+            "elements": [
+              {
+                "name": "epk",
+                "type": {
+                  "type-name": "Bytes",
+                  "length": 32
+                }
+              },
+              {
+                "name": "nonce",
+                "type": {
+                  "type-name": "Bytes",
+                  "length": 24
+                }
+              },
+              {
+                "name": "box",
+                "type": {
+                  "type-name": "Bytes",
+                  "length": 64
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "result-type": {
+        "type-name": "Tuple",
+        "types": [
+        ]
+      }
+    },
+    {
+      "name": "claim",
+      "pure": false,
+      "proof": true,
+      "arguments": [
+        {
+          "name": "recipient",
+          "type": {
+            "type-name": "Struct",
+            "name": "UserAddress",
+            "elements": [
+              {
+                "name": "bytes",
+                "type": {
+                  "type-name": "Bytes",
+                  "length": 32
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "result-type": {
+        "type-name": "Tuple",
+        "types": [
+        ]
+      }
+    }
+  ],
+  "witnesses": [
+    {
+      "name": "note_secret",
+      "arguments": [
+      ],
+      "result type": {
+        "type-name": "Struct",
+        "name": "NoteSecret",
+        "elements": [
+          {
+            "name": "sk",
+            "type": {
+              "type-name": "Bytes",
+              "length": 32
+            }
+          },
+          {
+            "name": "rho",
+            "type": {
+              "type-name": "Field"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "contracts": [
+  ],
+  "ledger": [
+    {
+      "name": "tips",
+      "index": 0,
+      "exported": true,
+      "storage": "Map",
+      "key": {
+        "type-name": "Field"
+      },
+      "value": {
+        "type-name": "Struct",
+        "name": "Tip",
+        "elements": [
+          {
+            "name": "amount",
+            "type": {
+              "type-name": "Uint",
+              "maxval": 18446744073709551615
+            }
+          },
+          {
+            "name": "claimed",
+            "type": {
+              "type-name": "Boolean"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "inbox",
+      "index": 1,
+      "exported": true,
+      "storage": "Map",
+      "key": {
+        "type-name": "Uint",
+        "maxval": 18446744073709551615
+      },
+      "value": {
+        "type-name": "Struct",
+        "name": "InboxEntry",
+        "elements": [
+          {
+            "name": "commitment",
+            "type": {
+              "type-name": "Field"
+            }
+          },
+          {
+            "name": "ct",
+            "type": {
+              "type-name": "Struct",
+              "name": "SealedNote",
+              "elements": [
+                {
+                  "name": "epk",
+                  "type": {
+                    "type-name": "Bytes",
+                    "length": 32
+                  }
+                },
+                {
+                  "name": "nonce",
+                  "type": {
+                    "type-name": "Bytes",
+                    "length": 24
+                  }
+                },
+                {
+                  "name": "box",
+                  "type": {
+                    "type-name": "Bytes",
+                    "length": 64
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "tip_count",
+      "index": 2,
+      "exported": true,
+      "storage": "Cell",
+      "type": {
+        "type-name": "Uint",
+        "maxval": 18446744073709551615
+      }
+    },
+    {
+      "name": "vault_balance",
+      "index": 3,
+      "exported": true,
+      "storage": "Cell",
+      "type": {
+        "type-name": "Uint",
+        "maxval": 340282366920938463463374607431768211455
+      }
+    }
+  ]
+}

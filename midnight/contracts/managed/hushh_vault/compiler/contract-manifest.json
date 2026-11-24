@@ -1,0 +1,79 @@
+{
+  "manifest-version": "1",
+  "compiler-version": "0.36.1",
+  "compiler-commit": "7fa3a117c5e7efe9d2c51da04263e5f0b3509144",
+  "language-version": "0.28.0",
+  "runtime-version": "0.21.0",
+  "compiler": {
+    "type": "directory",
+    "contract-info.json": {
+      "type": "file",
+      "size": 5399,
+      "hash": "d20a3666fb65b02ca9f3a152a23fd7f6ee93047a3888fa3a1eda4b50c90da865"
+    }
+  },
+  "contract": {
+    "type": "directory",
+    "index.d.ts": {
+      "type": "file",
+      "size": 3641,
+      "hash": "691c53250e3dafc879066d5baef0def1c45f628d93b5401a0476e951f2ca455e"
+    },
+    "index.js": {
+      "type": "file",
+      "size": 78818,
+      "hash": "3520391ffb0d2aadfd60931dd8fae4e7f9d11cd100c11968f55adddb57d8b546"
+    },
+    "index.js.map": {
+      "type": "file",
+      "size": 3092,
+      "hash": "65e3316b474655a4a698ed45d256cd4d9e0a2227928118646c2584ada3b2af16"
+    }
+  },
+  "zkir": {
+    "type": "directory",
+    "claim.bzkir": {
+      "type": "file",
+      "size": 2053,
+      "hash": "082617f60b903b5a4b83fd92926f65f339e0a5cb7bbb760d477cfe6b1d5c41d4"
+    },
+    "claim.zkir": {
+      "type": "file",
+      "size": 5875,
+      "hash": "c288d7e3ca17a34eecf6d12e10dbf4b1553c82d8917260a70d6ef9dfc5effbe4"
+    },
+    "deposit.bzkir": {
+      "type": "file",
+      "size": 1905,
+      "hash": "b20a4bec22fc87865f53165a1d583bdee26a6080736c5ca3fc41b43918989f93"
+    },
+    "deposit.zkir": {
+      "type": "file",
+      "size": 5661,
+      "hash": "60362ea2baf61a107f73564e8286dbb491d53b03919fa375cbfe0c0a03623158"
+    }
+  },
+  "keys": {
+    "type": "directory",
+    "claim.prover": {
+      "type": "file",
+      "size": 447189,
+      "hash": "65d8741695cb0c2e5e586629da61df33ddc79108a7ed86a4819dfb722935906c"
+    },
+    "claim.verifier": {
+      "type": "file",
+      "size": 1353,
+      "hash": "ee13e4040a357e17d284fb038c5ad4f5d002c8e06224a22fafb2a5b525f2aaa3"
+    },
+    "deposit.prover": {
+      "type": "file",
+      "size": 889409,
+      "hash": "e4ce065f26af757fa33014cabecb8a2c22011a32074be6b86e8488365c922027"
+    },
+    "deposit.verifier": {
+      "type": "file",
+      "size": 1353,
+      "hash": "056d30aef7a265ee40260f1a3b6da11ed0cc317fe16be9364df8b1b4345b6a1b"
+    }
+  }
+}

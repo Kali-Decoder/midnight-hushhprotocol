@@ -43,6 +43,8 @@ const connectSrc = [
   "https://*.privy.io",
   "https://api.privy.io",
   "https://privy.auth0.com",
+  // Privy fetches a wallet list on load even for X-only login.
+  "https://explorer-api.walletconnect.com",
   isDev ? "ws:" : null,
   isDev ? "wss:" : null,
 ].filter(Boolean);
