@@ -1,0 +1,135 @@
+pragma language_version >= 0.28.0;
+
+import CompactStandardLibrary;
+
+// ---------------------------------------------------------------------------
+// Night registry: <name>.night -> payment keys, plus verified social links.
+//
+// A name is first-come, first-served and owned by whoever knows the secret
+// behind `owner` (hash-preimage auth; the client derives the secret from the
+// user's passkey). The record publishes the two keys a sender needs:
+//   tip_pk  the Hushh vault owner key that incoming tips are bound to
+//   enc_pk  the X25519 key tip ciphertexts are sealed to
+//
+// Social links (e.g. an X handle) are public by design: they exist so people
+// can pay "@handle". A link needs an attestation from the registry's social
+// attester (a Jubjub key held by the OAuth-checking service), verified
+// in-circuit with the native jubjubSchnorrVerify. Jubjub is Midnight's
+// embedded curve, so this stays a small circuit (secp256k1 ECDSA here was a
+// 222 MB prover key). The attester never touches the chain.
+// ---------------------------------------------------------------------------
+
+struct NameRecord {
+  owner: Field;
+  tip_pk: Field;
+  enc_pk: Bytes<32>;
+  social: Bytes<32>;
+  index: Uint<64>;
+}
+
+export ledger names: Map<Bytes<32>, NameRecord>;
+export ledger socials: Map<Bytes<32>, Bytes<32>>;
+export ledger name_count: Uint<64>;
+export sealed ledger attester: JubjubPoint;
+
+witness name_secret(): Bytes<32>;
+
+constructor(attester_pk: JubjubPoint) {
+  attester = disclose(attester_pk);
+  name_count = 0 as Uint<64>;
+}
+
+export pure circuit name_owner_key(sk: Bytes<32>): Field {
+  return transientHash<[Bytes<32>, Bytes<32>]>([pad(32, "hushh:name-owner:v1"), sk]);
+}
+
+// Message the attester signs (and the circuit re-derives) for a link.
+export pure circuit attestation_message(social: Bytes<32>, name: Bytes<32>): Field {
+  return transientHash<[Bytes<32>, Bytes<32>, Bytes<32>]>(
+    [pad(32, "hushh:social-attest:v1"), social, name]
+  );
+}
+
+circuit require_owner(name: Bytes<32>): NameRecord {
+  assert(names.member(name), "unknown name");
+  const r = names.lookup(name);
+  assert(r.owner == name_owner_key(name_secret()), "not the name owner");
+  return r;
+}
+
+export circuit register_name(name: Bytes<32>, tip_pk: Field, enc_pk: Bytes<32>): [] {
+  const n = disclose(name);
+  assert(n != default<Bytes<32>>, "empty name");
+  assert(!names.member(n), "name already taken");
+  names.insert(n, NameRecord {
+    owner:    disclose(name_owner_key(name_secret())),
+    tip_pk: disclose(tip_pk),
+    enc_pk:   disclose(enc_pk),
+    social:   default<Bytes<32>>,
+    index:    name_count,
+  });
+  name_count = (name_count + (1 as Uint<64>)) as Uint<64>;
+}
+
+// Rotate payment keys (e.g. after a passkey change). Owner only.
+export circuit update_keys(name: Bytes<32>, tip_pk: Field, enc_pk: Bytes<32>): [] {
+  const n = disclose(name);
+  const r = require_owner(n);
+  names.insert(n, NameRecord {
+    owner:    r.owner,
+    tip_pk: disclose(tip_pk),
+    enc_pk:   disclose(enc_pk),
+    social:   r.social,
+    index:    r.index,
+  });
+}
+
+export circuit link_social(
+  name: Bytes<32>,
+  social: Bytes<32>,
+  sig: JubjubSchnorrSignature,
+): [] {
+  const n = disclose(name);
+  const s = disclose(social);
+  assert(s != default<Bytes<32>>, "empty social id");
+  const r = require_owner(n);
+
+  const msg: Vector<1, Field> = [attestation_message(s, n)];
+  assert(jubjubSchnorrVerify<1>(msg, disclose(sig), attester), "bad attestation");
+
+  // The social id moves to this name; the previous holder loses it.
+  if (socials.member(s)) {
+    const prev = socials.lookup(s);
+    if (prev != n) {
+      if (names.member(prev)) {
+        const p = names.lookup(prev);
+        names.insert(prev, NameRecord {
+          owner: p.owner, tip_pk: p.tip_pk, enc_pk: p.enc_pk,
+          social: default<Bytes<32>>, index: p.index,
+        });
+      }
+    }
+  }
+  // This name drops any older social it had.
+  if (r.social != default<Bytes<32>>) {
+    if (r.social != s) {
+      socials.remove(r.social);
+    }
+  }
+  socials.insert(s, n);
+  names.insert(n, NameRecord {
+    owner: r.owner, tip_pk: r.tip_pk, enc_pk: r.enc_pk,
+    social: s, index: r.index,
+  });
+}
+
+export circuit unlink_social(name: Bytes<32>): [] {
+  const n = disclose(name);
+  const r = require_owner(n);
+  assert(r.social != default<Bytes<32>>, "no social linked");
+  socials.remove(r.social);
+  names.insert(n, NameRecord {
+    owner: r.owner, tip_pk: r.tip_pk, enc_pk: r.enc_pk,
+    social: default<Bytes<32>>, index: r.index,
+  });
+}

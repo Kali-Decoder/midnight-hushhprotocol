@@ -1,0 +1,257 @@
+{
+  "version": 2,
+  "skills": {
+    "1am-wallet": {
+      "source": "Kali-Decoder/Midnight-Skills",
+      "commit": "fa99e25f68265ae3547f25a8e9b28a552cc36bf4",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/1am-wallet/SKILL.md",
+      "computedHash": "eeffaa03b62c20400a753c1b8fb5d49af3768991104208be4050ec53008f1221"
+    },
+    "android-example-voting": {
+      "source": "Kali-Decoder/Midnight-Skills",
+      "commit": "fa99e25f68265ae3547f25a8e9b28a552cc36bf4",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/android-example-voting/SKILL.md",
+      "computedHash": "c9b09d6d6d6721e78768bea9abb89a5054b82a283b1f77785d7f699ba09f784b"
+    },
+    "ankr-midnight": {
+      "source": "Kali-Decoder/Midnight-Skills",
+      "commit": "fa99e25f68265ae3547f25a8e9b28a552cc36bf4",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/ankr-midnight/SKILL.md",
+      "computedHash": "95a7fc071e1d3f245146b276234d321b3aa75b9b98f9f215c009a860d8087d38"
+    },
+    "compact": {
+      "source": "Kali-Decoder/Midnight-Skills",
+      "commit": "fa99e25f68265ae3547f25a8e9b28a552cc36bf4",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/compact/SKILL.md",
+      "computedHash": "45764030c86f3f2569e5ea2581f6dd987ed26bcccf0f6f22079d7fab2c36cabd"
+    },
+    "dynamic-midnight-wallet": {
+      "source": "Kali-Decoder/Midnight-Skills",
+      "commit": "fa99e25f68265ae3547f25a8e9b28a552cc36bf4",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/dynamic-midnight-wallet/SKILL.md",
+      "computedHash": "1613a47c401c7917d11e67c35a5e8c46bded8053a87b9c432caee734af2caae9"
+    },
+    "example-counter": {
+      "source": "Kali-Decoder/Midnight-Skills",
+      "commit": "fa99e25f68265ae3547f25a8e9b28a552cc36bf4",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/example-counter/SKILL.md",
+      "computedHash": "e9ce108f024aef49fa626c5403724e0c5ee2766eff5eb8a3303f6fcccc2b84d9"
+    },
+    "example-hello-world": {
+      "source": "Kali-Decoder/Midnight-Skills",
+      "commit": "fa99e25f68265ae3547f25a8e9b28a552cc36bf4",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/example-hello-world/SKILL.md",
+      "computedHash": "55ed4b77f2c758323569c12679a52cf8e2f343a823af9f4d5d01069723054a5e"
+    },
+    "example-leaderboard-dapp": {
+      "source": "Kali-Decoder/Midnight-Skills",
+      "commit": "fa99e25f68265ae3547f25a8e9b28a552cc36bf4",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/example-leaderboard-dapp/SKILL.md",
+      "computedHash": "1788839abd7f09c87c48b0170fe92c89c36b547406310c5b1ef617ae056b4d40"
+    },
+    "example-locker-dapp": {
+      "source": "Kali-Decoder/Midnight-Skills",
+      "commit": "fa99e25f68265ae3547f25a8e9b28a552cc36bf4",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/example-locker-dapp/SKILL.md",
+      "computedHash": "a55d89169d24b241e734603d356425c8cfc0c5c9a0e7f0ab36429053229286b1"
+    },
+    "example-passport-dapp": {
+      "source": "Kali-Decoder/Midnight-Skills",
+      "commit": "fa99e25f68265ae3547f25a8e9b28a552cc36bf4",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/example-passport-dapp/SKILL.md",
+      "computedHash": "dc0eee40918cbacd5a6743764d0630bdad77f7731a612d6ec7821a2abafde513"
+    },
+    "example-payment-dapp": {
+      "source": "Kali-Decoder/Midnight-Skills",
+      "commit": "fa99e25f68265ae3547f25a8e9b28a552cc36bf4",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/example-payment-dapp/SKILL.md",
+      "computedHash": "4f237fc64ed40d53d97591c202386d403ab52088d2e3e25bb10f4427cad0ad88"
+    },
+    "example-private-party-dapp": {
+      "source": "Kali-Decoder/Midnight-Skills",
+      "commit": "fa99e25f68265ae3547f25a8e9b28a552cc36bf4",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/example-private-party-dapp/SKILL.md",
+      "computedHash": "a18f37f786fb6d74cf9c3c7f6d3ef4ea52dec67f3d5665c3c071e93e208e5183"
+    },
+    "example-private-reserve-auction-dapp": {
+      "source": "Kali-Decoder/Midnight-Skills",
+      "commit": "fa99e25f68265ae3547f25a8e9b28a552cc36bf4",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/example-private-reserve-auction/SKILL.md",
+      "computedHash": "c6b1a1a08f58f0073d59e0293557009e4532217a3448ece209e6cd716119e721"
+    },
+    "example-zk-loan-application": {
+      "source": "Kali-Decoder/Midnight-Skills",
+      "commit": "fa99e25f68265ae3547f25a8e9b28a552cc36bf4",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/example-zk-loan-application/SKILL.md",
+      "computedHash": "e04cf70bca3195eefe78bf6f1a770a588f2d8184a45caa6fcce4885bcaa3ed34"
+    },
+    "gero-wallet": {
+      "source": "Kali-Decoder/Midnight-Skills",
+      "commit": "fa99e25f68265ae3547f25a8e9b28a552cc36bf4",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/gero-wallet/SKILL.md",
+      "computedHash": "fba2cdc0a1c91c3fb3cb2e9c02fee3b47324bb4d9f967140d322b5fcbbaf4b13"
+    },
+    "indexer": {
+      "source": "Kali-Decoder/Midnight-Skills",
+      "commit": "fa99e25f68265ae3547f25a8e9b28a552cc36bf4",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/indexer/SKILL.md",
+      "computedHash": "43773169a9b691cb2f58fe1ea49c6222dbd3a9fa1ee08db42122e033059b029f"
+    },
+    "midnight-consensus": {
+      "source": "Kali-Decoder/Midnight-Skills",
+      "commit": "fa99e25f68265ae3547f25a8e9b28a552cc36bf4",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/midnight-consensus/SKILL.md",
+      "computedHash": "f14bd655e16a6c851fe015713dd9e5ad9e347279d634ad55e9e9023adf12629e"
+    },
+    "midnight-cryptography": {
+      "source": "Kali-Decoder/Midnight-Skills",
+      "commit": "fa99e25f68265ae3547f25a8e9b28a552cc36bf4",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/midnight-cryptography/SKILL.md",
+      "computedHash": "88d2baeffc00a62e45162319d92778d689d9ea810dabf675eee0b223d0355a25"
+    },
+    "midnight-environment-setup": {
+      "source": "Kali-Decoder/Midnight-Skills",
+      "commit": "fa99e25f68265ae3547f25a8e9b28a552cc36bf4",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/midnight-environment-setup/SKILL.md",
+      "computedHash": "5d1d2b0b5bab6144f7fbd6c77d71a376368466a146348890c987a6ea166be4a8"
+    },
+    "midnight-js": {
+      "source": "Kali-Decoder/Midnight-Skills",
+      "commit": "fa99e25f68265ae3547f25a8e9b28a552cc36bf4",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/midnight-js/SKILL.md",
+      "computedHash": "f6723fafc0e23ac84b978e94f3a9a753b6dc78262612f06695c73af81ee3ae69"
+    },
+    "midnight-mip-planning": {
+      "source": "Kali-Decoder/Midnight-Skills",
+      "commit": "fa99e25f68265ae3547f25a8e9b28a552cc36bf4",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/midnight-mip-planning/SKILL.md",
+      "computedHash": "3e9d8c02ef4a62686ffe3a1e67d211245215554517285a2ed123fde8b5fc344d"
+    },
+    "midnight-onchain-logic": {
+      "source": "Kali-Decoder/Midnight-Skills",
+      "commit": "fa99e25f68265ae3547f25a8e9b28a552cc36bf4",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/midnight-onchain-logic/SKILL.md",
+      "computedHash": "e2cdc9afa8a4e4c3af8b9b05ad2ba8800c6565df530e577558aa05a9c418c309"
+    },
+    "midnight-p2p-networking": {
+      "source": "Kali-Decoder/Midnight-Skills",
+      "commit": "fa99e25f68265ae3547f25a8e9b28a552cc36bf4",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/midnight-p2p-networking/SKILL.md",
+      "computedHash": "221adfb278e57c403d7763af1430a90a479ba7b203883fb12e17ffb3bbac476b"
+    },
+    "midnight-passport": {
+      "source": "Kali-Decoder/Midnight-Skills",
+      "commit": "fa99e25f68265ae3547f25a8e9b28a552cc36bf4",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/midnight-passport/SKILL.md",
+      "computedHash": "fa80d4b13c93896436e1589b7cfa5afe61bf4279feb1b204dd87baabbc3d8004"
+    },
+    "midnight-rpc": {
+      "source": "Kali-Decoder/Midnight-Skills",
+      "commit": "fa99e25f68265ae3547f25a8e9b28a552cc36bf4",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/midnight-rpc/SKILL.md",
+      "computedHash": "1b9378276718b57523876838385bf1c0ec6f3d61099fc2e273a2b5477e2a6d2f"
+    },
+    "midnight-security": {
+      "source": "Kali-Decoder/Midnight-Skills",
+      "commit": "fa99e25f68265ae3547f25a8e9b28a552cc36bf4",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/security/SKILL.md",
+      "computedHash": "fb6fe2a902d3cae16aa1609ae8ff6564be5eaad79de9a2788cc984c177e3c0f6"
+    },
+    "midnight-storage": {
+      "source": "Kali-Decoder/Midnight-Skills",
+      "commit": "fa99e25f68265ae3547f25a8e9b28a552cc36bf4",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/midnight-storage/SKILL.md",
+      "computedHash": "1d70ba88e79acafcaa2245a564092592ec069dd864023bc85d32d36c758173be"
+    },
+    "midnight-transactions": {
+      "source": "Kali-Decoder/Midnight-Skills",
+      "commit": "fa99e25f68265ae3547f25a8e9b28a552cc36bf4",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/midnight-transactions/SKILL.md",
+      "computedHash": "9dc053a1bb36e40d0796284e7dede3a97cbcad363a012abbd52629da30d187b2"
+    },
+    "midnightskill": {
+      "source": "Kali-Decoder/Midnight-Skills",
+      "commit": "fa99e25f68265ae3547f25a8e9b28a552cc36bf4",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/midnightskill/SKILL.md",
+      "computedHash": "b4e7c2b71f6a653159deb4837e6bc8893ccf271d9169ab4fa0dc960aab987617"
+    },
+    "multinetwork": {
+      "source": "Kali-Decoder/Midnight-Skills",
+      "commit": "fa99e25f68265ae3547f25a8e9b28a552cc36bf4",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/multinetwork/SKILL.md",
+      "computedHash": "1263f2200fcae7c9989a8184f083593f93c2e68c8e611d5459af3dae82234b27"
+    },
+    "nft": {
+      "source": "Kali-Decoder/Midnight-Skills",
+      "commit": "fa99e25f68265ae3547f25a8e9b28a552cc36bf4",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/nft/SKILL.md",
+      "computedHash": "678580c31491c1c9644449dcb70c35c7d36a93d20e19d95facf80d3c42b0bd95"
+    },
+    "react-wallet-connector": {
+      "source": "Kali-Decoder/Midnight-Skills",
+      "commit": "fa99e25f68265ae3547f25a8e9b28a552cc36bf4",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/react-wallet-connector/SKILL.md",
+      "computedHash": "c9419bfce9bccba05042c3c63d42dc24372cb6d2a40660a36117b5d9f7090f49"
+    },
+    "testing": {
+      "source": "Kali-Decoder/Midnight-Skills",
+      "commit": "fa99e25f68265ae3547f25a8e9b28a552cc36bf4",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/testing/SKILL.md",
+      "computedHash": "17a9a689b38fd374add63e3382655f44f5804e6d9bd05f0b0c24d35922fbb852"
+    },
+    "token-transfers": {
+      "source": "Kali-Decoder/Midnight-Skills",
+      "commit": "fa99e25f68265ae3547f25a8e9b28a552cc36bf4",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/token-transfers/SKILL.md",
+      "computedHash": "8c5993cf64ea636f9a54676d5eec42f1e226b3102ad92036a96c31c0becc4f04"
+    },
+    "why-midnight": {
+      "source": "Kali-Decoder/Midnight-Skills",
+      "commit": "fa99e25f68265ae3547f25a8e9b28a552cc36bf4",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/why-midnight/SKILL.md",
+      "computedHash": "f8773b0b67688b9ac33ef6dbdcdd4781f9bc2b2d07e4f8bf8c83c7380774e68a"
+    },
+    "zk-vs-fhe-vs-mpc": {
+      "source": "Kali-Decoder/Midnight-Skills",
+      "commit": "fa99e25f68265ae3547f25a8e9b28a552cc36bf4",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/zk-vs-fhe-vs-mpc/SKILL.md",
+      "computedHash": "01931e482aa214de349b0285e9ac8c92df57a12ed4abc8904619bbb843060090"
+    }
+  }
+}

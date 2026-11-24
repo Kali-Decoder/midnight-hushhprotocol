@@ -1,0 +1,51 @@
+{
+  "name": "@hushh/midnight",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "description": "Hushh Protocol on Midnight: .night registry with verified socials, and a private NIGHT note pool.",
+  "scripts": {
+    "compile": "node scripts/compile.mjs",
+    "compile:fast": "node scripts/compile.mjs --skip-zk",
+    "test": "vitest run",
+    "localnet:up": "node scripts/localnet.mjs up",
+    "localnet:down": "node scripts/localnet.mjs down",
+    "deploy": "tsx src/node/deploy.ts",
+    "test:e2e": "tsx src/node/e2e.ts",
+    "attester:keygen": "tsx scripts/attester-keygen.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/ws": "^8.18.1",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
+  },
+  "dependencies": {
+    "@midnight-ntwrk/compact-js": "3.0.2",
+    "@midnight-ntwrk/compact-runtime": "0.21.0",
+    "@midnightntwrk/ledger-v9": "1.0.2",
+    "@midnightntwrk/midnight-js-contracts": "5.0.2",
+    "@midnightntwrk/midnight-js-http-client-proof-provider": "5.0.2",
+    "@midnightntwrk/midnight-js-indexer-public-data-provider": "5.0.2",
+    "@midnightntwrk/midnight-js-level-private-state-provider": "5.0.2",
+    "@midnightntwrk/midnight-js-node-zk-config-provider": "5.0.2",
+    "@midnightntwrk/midnight-js-types": "5.0.2",
+    "@midnightntwrk/wallet-sdk-abstractions": "3.0.0",
+    "@midnightntwrk/wallet-sdk-address-format": "4.0.1",
+    "@midnightntwrk/wallet-sdk-dust-wallet": "5.1.0",
+    "@midnightntwrk/wallet-sdk-facade": "5.0.1",
+    "@midnightntwrk/wallet-sdk-hd": "4.0.0",
+    "@midnightntwrk/wallet-sdk-shielded": "4.0.1",
+    "@midnightntwrk/wallet-sdk-unshielded-wallet": "4.0.1",
+    "@noble/hashes": "^2.0.1",
+    "rxjs": "^7.8.2",
+    "tweetnacl": "^1.0.3",
+    "ws": "^8.19.0"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true,
+    "classic-level@3.0.0": true,
+    "msgpackr-extract@3.0.7": true
+  }
+}

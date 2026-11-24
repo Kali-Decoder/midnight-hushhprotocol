@@ -1,0 +1,90 @@
+pragma language_version >= 0.28.0;
+
+import CompactStandardLibrary;
+
+// ---------------------------------------------------------------------------
+// Hushh vault: send NIGHT to a .night name, an X handle, or a claim link.
+//
+// deposit  The sender's wallet pays NIGHT in. The tip is stored under a
+//          commitment H(owner_key(sk), rho); its amount is public. The note
+//          ciphertext (sealed client-side to the recipient's X25519 key) sits
+//          in the on-chain inbox so the recipient can find it without a
+//          backend.
+// claim    Two checks, proven natively by Midnight:
+//            1. the claimer knows the note secret (sk, rho) behind the
+//               commitment, and
+//            2. the tip has not been claimed before.
+//          Then NIGHT goes out to the claimer's wallet.
+//
+// Binding the commitment to the recipient's key means a sender cannot claim
+// back a tip sent to a registered name. A claim link carries a one-time sk.
+//
+// Privacy note (accepted for this build): a claim reveals its commitment, so
+// observers can match each claim to its deposit. Sender, recipient name and
+// key stay off-chain; amounts are public.
+// ---------------------------------------------------------------------------
+
+struct SealedNote {
+  epk: Bytes<32>;
+  nonce: Bytes<24>;
+  box: Bytes<64>;
+}
+
+struct InboxEntry {
+  commitment: Field;
+  ct: SealedNote;
+}
+
+struct Tip {
+  amount: Uint<64>;
+  claimed: Boolean;
+}
+
+struct NoteSecret {
+  sk: Bytes<32>;
+  rho: Field;
+}
+
+export ledger tips: Map<Field, Tip>;
+export ledger inbox: Map<Uint<64>, InboxEntry>;
+export ledger tip_count: Uint<64>;
+// Public mirror of the NIGHT the vault holds (deposits minus claims).
+export ledger vault_balance: Uint<128>;
+
+witness note_secret(): NoteSecret;
+
+constructor() {
+  tip_count = 0 as Uint<64>;
+  vault_balance = 0 as Uint<128>;
+}
+
+export pure circuit owner_key(sk: Bytes<32>): Field {
+  return transientHash<[Bytes<32>, Bytes<32>]>([pad(32, "hushh:owner:v1"), sk]);
+}
+
+export pure circuit note_commitment(owner: Field, rho: Field): Field {
+  return transientHash<[Bytes<32>, Field, Field]>([pad(32, "hushh:tip:v1"), owner, rho]);
+}
+
+export circuit deposit(commitment: Field, amount: Uint<64>, ct: SealedNote): [] {
+  const c = disclose(commitment);
+  const a = disclose(amount);
+  assert(a > (0 as Uint<64>), "amount must be positive");
+  assert(!tips.member(c), "commitment already used");
+  receiveUnshielded(nativeToken(), a as Uint<128>);
+  vault_balance = (vault_balance + (a as Uint<128>)) as Uint<128>;
+  tips.insert(c, Tip { amount: a, claimed: false });
+  inbox.insert(tip_count, InboxEntry { commitment: c, ct: disclose(ct) });
+  tip_count = (tip_count + (1 as Uint<64>)) as Uint<64>;
+}
+
+export circuit claim(recipient: UserAddress): [] {
+  const s = note_secret();
+  const c = disclose(note_commitment(owner_key(s.sk), s.rho));
+  assert(tips.member(c), "unknown tip");
+  const t = tips.lookup(c);
+  assert(!t.claimed, "tip already claimed");
+  tips.insert(c, Tip { amount: t.amount, claimed: true });
+  vault_balance = (vault_balance - (t.amount as Uint<128>)) as Uint<128>;
+  sendUnshielded(nativeToken(), t.amount as Uint<128>, right<ContractAddress, UserAddress>(disclose(recipient)));
+}

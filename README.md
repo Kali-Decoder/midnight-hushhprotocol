@@ -35,18 +35,228 @@ Tagline: send silently.
 
 ## Architecture
 
-```
-Browser (Next.js, existing Hushh UI)
- ├─ Midnight Passport: passkey PRF ─> keys (tip key, name key, X25519)
- ├─ Wallet: 1AM / Lace (DApp Connector)  |  localnet: genesis dev wallet in the page
- └─ @hushh/sdk (midnight/src/sdk) ─> midnight-js 5 ─> proof server / wallet prover
-                                         │
-Midnight (Ledger 9)                      ▼
- ├─ night_registry.compact   name -> {owner, tip_pk, enc_pk, social}; social -> name
- └─ hushh_vault.compact      tips: commitment -> {amount, claimed}; inbox: index -> sealed note
+### System overview
 
-Server: /api/social/attest (Next.js route) — checks X via Privy, Jubjub-signs. Holds no funds.
+```mermaid
+flowchart TB
+  subgraph USER["User device"]
+    PK["Passkey<br/>WebAuthn PRF"]
+    subgraph APP["Hushh app · Next.js"]
+      UI["Hushh UI<br/>send · inbox · scratch · profile"]
+      PASS["Midnight Passport<br/>key derivation"]
+      SDK["@hushh/sdk<br/>seal · scan · witnesses · clients"]
+      MJS["Midnight.js 5"]
+    end
+    WAL["Midnight wallet<br/>1AM / Lace · localnet dev wallet"]
+  end
+
+  subgraph SERVER["Hushh server"]
+    ATT["/api/social/attest<br/>Jubjub signer · no funds"]
+  end
+  PRIVY["Privy<br/>X OAuth"]
+
+  subgraph MN["Midnight network · Ledger 9"]
+    REG[("night_registry<br/>names · socials")]
+    VAULT[("hushh_vault<br/>tips · inbox")]
+    IDX["Indexer<br/>GraphQL"]
+    PROOF["Proof server<br/>or wallet prover"]
+  end
+
+  PK -->|"PRF secret"| PASS
+  UI --> PASS
+  UI --> SDK
+  PASS --> SDK
+  SDK --> MJS
+  MJS -->|"prove circuit calls"| PROOF
+  MJS -->|"balance, sign, submit"| WAL
+  WAL -->|"transactions"| REG
+  WAL -->|"transactions"| VAULT
+  MJS -->|"read contract state"| IDX
+  IDX --- REG
+  IDX --- VAULT
+  UI -->|"X sign-in"| PRIVY
+  UI -->|"name + Privy token"| ATT
+  ATT -->|"verify token, read linked X"| PRIVY
+  ATT -->|"signed attestation"| UI
 ```
+
+Nothing secret leaves the device: the passkey secret, tip key and note secrets are only ever used as private witnesses inside proofs. The server only signs "this X handle belongs to this .night name" after checking the X login.
+
+### Midnight Passport: one passkey, three keys
+
+```mermaid
+flowchart LR
+  PK["Passkey<br/>PRF salt hushh:passport:prf:v1"] --> M["Master secret<br/>32 bytes, never stored"]
+  M -->|"sha256 'tip'"| TK["tipKey"]
+  M -->|"sha256 'name'"| NK["nameSecret"]
+  M -->|"sha256 'x25519'"| BK["X25519 box keypair"]
+  TK -->|"owner_key()"| TPK["tip_pk<br/>public"]
+  NK -->|"name_owner_key()"| NO["owner<br/>public"]
+  BK --> EPK["enc_pk<br/>public"]
+  TPK --> REC[("name.night record<br/>in night_registry")]
+  NO --> REC
+  EPK --> REC
+```
+
+The public halves go into the `.night` record so anyone can pay you. The secret halves are re-derived from the passkey at every sign-in (a passphrase is the fallback where PRF is unavailable).
+
+### Flow 1: claim a passport and link X
+
+```mermaid
+sequenceDiagram
+  autonumber
+  actor A as Alice
+  participant App as Hushh app
+  participant P as Privy
+  participant Att as Attester API
+  participant R as night_registry
+
+  A->>App: Connect wallet
+  A->>P: Sign in with X
+  P-->>App: X handle alice
+  A->>App: Sign and claim @alice
+  App->>App: Create passkey, derive keys from PRF
+  App->>R: register_name(alice, tip_pk, enc_pk)
+  Note over R: proves knowledge of nameSecret<br/>owner = name_owner_key(nameSecret)<br/>rejects taken names
+  App->>Att: name=alice + Privy access token
+  Att->>P: verify token, read linked X account
+  Att-->>App: Jubjub signature over (x:alice, alice)
+  App->>R: link_social(alice, x:alice, signature)
+  Note over R: proves name ownership<br/>jubjubSchnorrVerify against sealed attester key<br/>socials[x:alice] = alice
+```
+
+### Flow 2: send a tip to `@alice`
+
+```mermaid
+sequenceDiagram
+  autonumber
+  actor B as Bob
+  participant App as Hushh app
+  participant R as night_registry
+  participant W as Bob's wallet
+  participant V as hushh_vault
+
+  B->>App: Pay @alice 5 NIGHT
+  App->>R: read socials[x:alice] then names[alice]
+  R-->>App: tip_pk, enc_pk
+  App->>App: rho = random field element<br/>commitment = H(tip_pk, rho)<br/>note = seal(amount, rho) to enc_pk
+  App->>V: deposit(commitment, 5 NIGHT, sealed note)
+  W->>V: 5 NIGHT in (balanced and paid by the wallet)
+  Note over V: tips[commitment] = {5, unclaimed}<br/>inbox[n] = {commitment, sealed note}
+  Note over V: public: amount, commitment, ciphertext, Bob's wallet<br/>not public: alice, her X handle, her keys
+```
+
+If `@alice` has no passport yet, the same deposit is made to a one-time key and Bob gets a claim link instead (Flow 4).
+
+### Flow 3: inbox scan and zero-knowledge claim
+
+```mermaid
+sequenceDiagram
+  autonumber
+  actor A as Alice
+  participant App as Hushh app
+  participant I as Indexer
+  participant V as hushh_vault
+  participant W as Alice's wallet
+
+  A->>App: Open Inbox (passport unlocked)
+  App->>I: read vault state
+  I-->>App: inbox entries + tips map
+  App->>App: trial-decrypt each note with X25519 key<br/>keep only if H(tip_pk, rho) == entry.commitment
+  App-->>A: 5 NIGHT unclaimed
+  A->>App: Claim
+  App->>App: prove claim with private witness (tipKey, rho)
+  App->>V: claim(recipient = Alice's wallet address)
+  Note over V: in-circuit:<br/>1. commitment = H(owner_key(tipKey), rho) exists<br/>2. tip not already claimed<br/>then mark claimed
+  V->>W: 5 NIGHT out
+```
+
+The sender knows `rho` but not Alice's `tipKey`, so the sender cannot claim the tip back.
+
+### Flow 4: claim links and scratch cards
+
+```mermaid
+sequenceDiagram
+  autonumber
+  actor B as Bob
+  participant App as Hushh app
+  participant V as hushh_vault
+  actor C as Anyone with the link
+
+  B->>App: Pay @newfriend (no passport) or create a scratch card
+  App->>App: linkSecret = random 32 bytes<br/>tipKey, box key = derive(linkSecret)
+  App->>V: deposit(commitment, amount, note sealed to link box key)
+  App-->>B: /c?p=... link with card design + linkSecret
+  B-->>C: share link (DM, X, email)
+  C->>App: open link, scratch the card
+  App->>V: scan inbox with link box key, find the tip
+  App->>V: claim(C's wallet) proving (link tipKey, rho)
+  V-->>C: NIGHT out
+```
+
+Scratch cards sent to an existing passport carry only the tip's commitment in the link (no secret): only that passport can claim them.
+
+### On-chain state
+
+```mermaid
+erDiagram
+  NIGHT_REGISTRY ||--o{ NAME_RECORD : "names"
+  NIGHT_REGISTRY ||--o{ SOCIAL_LINK : "socials"
+  HUSHH_VAULT ||--o{ TIP : "tips"
+  HUSHH_VAULT ||--o{ INBOX_ENTRY : "inbox"
+  NIGHT_REGISTRY {
+    JubjubPoint attester "sealed at deploy"
+    Uint64 name_count
+  }
+  NAME_RECORD {
+    Bytes32 name PK
+    Field owner "name_owner_key(nameSecret)"
+    Field tip_pk "owner_key(tipKey)"
+    Bytes32 enc_pk "X25519"
+    Bytes32 social "x:handle or empty"
+  }
+  SOCIAL_LINK {
+    Bytes32 social PK
+    Bytes32 name
+  }
+  HUSHH_VAULT {
+    Uint64 tip_count
+    Uint128 vault_balance
+  }
+  TIP {
+    Field commitment PK
+    Uint64 amount
+    Boolean claimed
+  }
+  INBOX_ENTRY {
+    Uint64 index PK
+    Field commitment
+    Bytes120 sealed_note "epk + nonce + box"
+  }
+```
+
+### Tip lifecycle
+
+```mermaid
+stateDiagram-v2
+  [*] --> Sealed: deposit()
+  Sealed --> Found: recipient scans inbox
+  Found --> Claimed: claim() with ZK proof
+  Sealed --> Claimed: claim link holder claims
+  Claimed --> [*]
+  Claimed --> Claimed: second claim rejected
+```
+
+### What each circuit enforces
+
+| Circuit | Private witness | Checks | Public effect |
+|---------|-----------------|--------|---------------|
+| `register_name` | `nameSecret` | name not empty, not taken | new `.night` record |
+| `update_keys` | `nameSecret` | caller owns the name | rotate `tip_pk` / `enc_pk` |
+| `link_social` | `nameSecret` | owns the name; Jubjub signature from the sealed attester over `(social, name)` | `socials[x:handle] = name`, previous holder unlinked |
+| `unlink_social` | `nameSecret` | owns the name, has a link | link removed |
+| `deposit` | none | amount > 0, commitment unused | NIGHT in, tip + inbox entry stored |
+| `claim` | `tipKey`, `rho` | commitment for `owner_key(tipKey), rho` exists; not claimed | tip marked claimed, NIGHT to recipient wallet |
 
 | Contract | Circuits | Largest prover key |
 |----------|----------|--------------------|
@@ -90,9 +300,11 @@ pnpm dev                     # http://localhost:3000 (use localhost, not 127.0.0
 
 On localnet the app runs the genesis wallet inside the page and pays all fees, so you need no wallet extension. Add `?passport=passphrase` to use a passphrase instead of a passkey (browsers without WebAuthn PRF, automated tests).
 
-## Preprod
+## Preprod (not done yet)
 
-1. `MIDNIGHT_NETWORK=preprod` deploy (needs a funded wallet with DUST; see the `multinetwork` skill).
+The frontend's connector mode is written for preview/preprod, but nothing has been deployed or tested there.
+
+1. Deploy: `midnight/src/node/wallet.ts` only has a localnet config today. Add a preprod entry (Blockfrost indexer + node with a `project_id`, a proof server) and deploy from a wallet holding tNIGHT and DUST, or deploy from the browser through 1AM.
 2. Set `NEXT_PUBLIC_MIDNIGHT_NETWORK=preprod` and the contract addresses (or a `deployments/preprod.json`).
 3. Users connect 1AM or Lace; the wallet proves and pays DUST.
 4. Set `NEXT_PUBLIC_PRIVY_APP_ID`, `PRIVY_APP_SECRET`, `ATTESTER_SECRET` (the key the registry was deployed with). Never set `ATTESTER_DEV_MODE` outside localnet.
