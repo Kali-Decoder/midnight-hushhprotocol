@@ -433,6 +433,7 @@ export function AccountView() {
             user={user}
             method={remembered?.method}
             unlocked={isSignedIn}
+            shareable
           />
 
           {showPendingDot && !isSignedIn ? (

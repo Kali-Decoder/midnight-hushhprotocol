@@ -120,9 +120,31 @@ function RegisterFlowInner({x}: {x: XIdentity}) {
     setBusy(true);
     try {
       if (mode === "signin") {
-        const {profile} = await signInPassport(clean || undefined);
+        const {profile, reclaimed} = await signInPassport(clean || undefined);
         if (!profile) {
           throw new Error("This passkey does not own a .night name yet. Claim one with your X handle.");
+        }
+        if (reclaimed) {
+          // Registry was redeployed: the name is back on this passkey. Re-link
+          // X right away when the Privy session is for the same handle.
+          let xLinked = false;
+          if (twitterHandle && twitterHandle === profile.name) {
+            try {
+              const accessToken = x.devMode ? null : await x.getAccessToken();
+              await linkX(x.devMode ? {handle: profile.name} : {privyAccessToken: accessToken ?? undefined});
+              xLinked = true;
+            } catch (e) {
+              console.error("[hushh] re-linking X failed", e);
+            }
+          }
+          toast.success(
+            xLinked
+              ? `Re-claimed @${profile.name} and linked your X`
+              : `Re-claimed @${profile.name}. Link X and email from your profile.`,
+          );
+          if (xLinked) celebrateXLinked();
+          else celebrateUsernameClaim();
+          return;
         }
         toast.success(`Welcome back @${profile.name}`);
         return;

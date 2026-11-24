@@ -89,7 +89,7 @@ export default function HeroAtmosphere({
           opacity="0.7"
           style={{fontSize: 10, fontFamily: "ui-monospace, monospace"}}
         >
-          unlink
+          sealed
         </text>
       </svg>
     </div>

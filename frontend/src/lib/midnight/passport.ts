@@ -83,28 +83,48 @@ export async function claimPassport(rawName: string): Promise<{keys: PassportKey
   return {keys, profile: registered, txId};
 }
 
-/** Unlock the remembered passport (or any passkey for this site). */
-export async function signInPassport(name?: string): Promise<{keys: PassportKeys; profile: NameRecord | null}> {
+/**
+ * Unlock the remembered passport (or any passkey for this site).
+ *
+ * If the passkey owns no name on the current registry but this browser
+ * remembers one that is still free (the registry was redeployed), the name
+ * is re-claimed with the same passkey: one transaction, no new passkey.
+ */
+export async function signInPassport(
+  name?: string,
+): Promise<{keys: PassportKeys; profile: NameRecord | null; reclaimed?: boolean; txId?: string}> {
   const rem = getState().remembered;
   const {master, passkey} = await existingSecret(rem, name);
   const res = await unlock(master);
+  const method = rem?.method ?? (passkey ? "passkey" : "passphrase");
   if (res.profile) {
-    remember({
-      name: res.profile.name,
-      method: rem?.method ?? (passkey ? "passkey" : "passphrase"),
-      passkey: passkey ?? rem?.passkey,
-    });
+    remember({name: res.profile.name, method, passkey: passkey ?? rem?.passkey});
+    return res;
   }
-  return res;
+
+  const wanted = rem?.name ?? name;
+  if (!wanted) return res;
+  const n = normalizeName(wanted);
+  if (await resolveName(n)) {
+    throw new Error(
+      `${n}.night belongs to another passport on this registry. Claim a new name with your X handle.`,
+    );
+  }
+  const {txId} = await registerName(n, res.keys);
+  const profile = getState().profile;
+  if (!profile) throw new Error(`Re-claimed ${n}.night but could not read it back yet. Refresh in a moment.`);
+  remember({name: profile.name, method, passkey: passkey ?? rem?.passkey});
+  return {keys: res.keys, profile, reclaimed: true, txId};
 }
 
-/** Link the X account behind a Privy session (or a dev-mode handle) on-chain. */
+/** Link the OTP-verified email behind a Privy session (or a dev-mode email) on-chain. */
 export async function linkEmail(params: {privyAccessToken?: string; email?: string}) {
   const {keys, profile} = getState();
   if (!keys || !profile) throw new Error("Sign in to your passport first.");
   return linkEmailAddress({name: profile.name, keys, ...params});
 }
 
+/** Link the X account behind a Privy session (or a dev-mode handle) on-chain. */
 export async function linkX(params: {privyAccessToken?: string; handle?: string}) {
   const {keys, profile} = getState();
   if (!keys || !profile) throw new Error("Sign in to your passport first.");

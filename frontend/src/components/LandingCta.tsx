@@ -56,7 +56,7 @@ export default function LandingCta() {
           Ready when you are.
         </h2>
         <p className="relative mx-auto mt-5 max-w-md text-sm leading-relaxed text-graphite sm:text-base">
-          Connect a Midnight wallet, claim your .night passport with your X handle, and send NIGHT silently.
+          Connect a Midnight wallet, claim your .night passport with your X handle, link your email, and send NIGHT silently.
         </p>
         <div className="relative mt-9 flex flex-wrap items-center justify-center gap-3">
           <Link

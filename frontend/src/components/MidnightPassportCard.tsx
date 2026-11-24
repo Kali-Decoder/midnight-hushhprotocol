@@ -5,18 +5,15 @@
 // data plus how this browser unlocks the passport.
 
 import Image from "next/image";
-import {useRef, type ReactNode} from "react";
+import {useRef, useState, type ReactNode} from "react";
 import type {PublicUser} from "@/shared";
 import {UserAvatar} from "@/components/UserAvatar";
-import {MailIcon, ShieldCheckIcon, XBrandIcon} from "@/components/icons";
+import {CheckIcon, CopyIcon, MailIcon, ShieldCheckIcon, XBrandIcon} from "@/components/icons";
 import {NETWORK_NAME} from "@/lib/config";
 import {shortAddr} from "@/lib/address";
+import {passportNumber, copyPassportImage, sharePassportOnX} from "@/lib/sharePassport";
+import {toast} from "@/lib/toast";
 
-function passportNumber(tipPk?: string): string {
-  if (!tipPk) return "HP-········";
-  const hex = BigInt(tipPk).toString(16).padStart(64, "0").toUpperCase();
-  return `HP-${hex.slice(-8, -4)}-${hex.slice(-4)}`;
-}
 
 /** Machine-readable zone, passport style: fixed width, "<" as filler. */
 function mrz(parts: string[], width = 36): string {
@@ -39,27 +36,27 @@ function Credential({
     <div
       className={`passport-cred group/cred relative min-w-0 rounded-2xl border px-3 py-2.5 transition-colors duration-300 ${
         linked
-          ? "border-white/15 bg-white/[0.07]"
-          : "border-dashed border-white/15 bg-transparent"
+          ? "border-fog bg-white shadow-[0_10px_24px_-20px_rgba(10,10,10,0.35)]"
+          : "border-dashed border-fog bg-paper/40"
       }`}
     >
       <div className="flex items-center justify-between gap-2">
         <span
           className={`flex h-7 w-7 items-center justify-center rounded-full ${
-            linked ? "bg-paper text-ink" : "bg-white/10 text-paper/60"
+            linked ? "bg-ink text-paper" : "bg-fog/70 text-graphite"
           }`}
         >
           {icon}
         </span>
         <span
-          className={`h-1.5 w-1.5 rounded-full ${linked ? "bg-signal passport-pulse" : "bg-white/25"}`}
+          className={`h-1.5 w-1.5 rounded-full ${linked ? "bg-signal passport-pulse" : "bg-fog"}`}
           aria-hidden
         />
       </div>
-      <p className="mt-2 text-[9px] font-medium uppercase tracking-[0.16em] text-paper/50">
+      <p className="mt-2 text-[9px] font-medium uppercase tracking-[0.16em] text-graphite">
         {label}
       </p>
-      <p className={`mt-0.5 truncate text-[13px] font-semibold ${linked ? "text-paper" : "text-paper/45"}`}>
+      <p className={`mt-0.5 truncate text-[13px] font-semibold ${linked ? "text-ink" : "text-graphite/70"}`}>
         {value}
       </p>
     </div>
@@ -70,13 +67,48 @@ export function MidnightPassportCard({
   user,
   method,
   unlocked,
+  shareable = false,
 }: {
   user: PublicUser;
+  /** Show "Copy card" / "Share on X" under the card (profile only). */
+  shareable?: boolean;
   /** How this browser unlocks the passport. */
   method?: "passkey" | "passphrase";
   unlocked: boolean;
 }) {
   const ref = useRef<HTMLDivElement>(null);
+  const [copied, setCopied] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  async function onCopy() {
+    setBusy(true);
+    try {
+      await copyPassportImage(user, {network: NETWORK_NAME});
+      setCopied(true);
+      toast.success("Passport card copied. Paste it anywhere.");
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      toast.error("Your browser blocked image copy. Use Share on X to download it instead.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function onShare() {
+    setBusy(true);
+    try {
+      const mode = await sharePassportOnX(user, {network: NETWORK_NAME});
+      toast.success(
+        mode === "copied"
+          ? "Card copied. Paste it into your post on X (Cmd/Ctrl + V)."
+          : "Card downloaded. Attach it to your post on X.",
+      );
+    } catch {
+      toast.error("Could not prepare the card. Try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
 
   // Gentle tilt + moving sheen that follows the pointer.
   function onMove(e: React.PointerEvent) {
@@ -102,8 +134,9 @@ export function MidnightPassportCard({
   const issued = user.index != null ? `#${String(user.index + 1).padStart(4, "0")}` : "—";
 
   return (
+    <div>
     <div className="passport-stage" onPointerMove={onMove} onPointerLeave={onLeave}>
-      <div ref={ref} className="passport-card relative overflow-hidden rounded-[1.6rem] p-5 text-paper sm:p-6">
+      <div ref={ref} className="passport-card relative overflow-hidden rounded-[1.6rem] p-5 text-ink sm:p-6">
         <div className="passport-sheen" aria-hidden />
         <div className="passport-guilloche" aria-hidden />
 
@@ -115,20 +148,20 @@ export function MidnightPassportCard({
               alt="Midnight"
               width={32}
               height={32}
-              className="h-8 w-8 rounded-lg ring-1 ring-white/15"
+              className="h-8 w-8 rounded-lg ring-1 ring-ink/10"
             />
             <div className="leading-tight">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-paper/90">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-ink">
                 Midnight Passport
               </p>
-              <p className="text-[9px] uppercase tracking-[0.2em] text-paper/45">
+              <p className="text-[9px] uppercase tracking-[0.2em] text-graphite">
                 Night ID · {NETWORK_NAME}
               </p>
             </div>
           </div>
           <span
             className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] ${
-              unlocked ? "bg-signal/15 text-signal" : "bg-amber/15 text-amber"
+              unlocked ? "bg-signal/10 text-signal ring-1 ring-signal/20" : "bg-amber/15 text-[#9a7420] ring-1 ring-amber/30"
             }`}
           >
             <span className={`h-1.5 w-1.5 rounded-full ${unlocked ? "bg-signal" : "bg-amber"}`} />
@@ -142,23 +175,23 @@ export function MidnightPassportCard({
             <UserAvatar address={user.wallet} size="lg" className="rounded-xl" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-[9px] font-medium uppercase tracking-[0.18em] text-paper/45">Holder</p>
+            <p className="text-[9px] font-medium uppercase tracking-[0.18em] text-graphite">Holder</p>
             <p className="truncate text-2xl font-bold tracking-[-0.03em] sm:text-3xl">
               {user.username}
-              <span className="text-paper/45">.night</span>
+              <span className="text-graphite">.night</span>
             </p>
             <div className="mt-2.5 grid grid-cols-2 gap-3 sm:grid-cols-3">
               <div className="min-w-0">
-                <p className="text-[9px] uppercase tracking-[0.16em] text-paper/45">No.</p>
-                <p className="truncate font-mono text-[12px] text-paper/90">{number}</p>
+                <p className="text-[9px] uppercase tracking-[0.16em] text-graphite">No.</p>
+                <p className="truncate font-mono text-[12px] text-ink">{number}</p>
               </div>
               <div className="min-w-0">
-                <p className="text-[9px] uppercase tracking-[0.16em] text-paper/45">Issued</p>
-                <p className="truncate font-mono text-[12px] text-paper/90">{issued}</p>
+                <p className="text-[9px] uppercase tracking-[0.16em] text-graphite">Issued</p>
+                <p className="truncate font-mono text-[12px] text-ink">{issued}</p>
               </div>
               <div className="hidden min-w-0 sm:block">
-                <p className="text-[9px] uppercase tracking-[0.16em] text-paper/45">Wallet</p>
-                <p className="truncate font-mono text-[12px] text-paper/90">{shortAddr(user.wallet)}</p>
+                <p className="text-[9px] uppercase tracking-[0.16em] text-graphite">Wallet</p>
+                <p className="truncate font-mono text-[12px] text-ink">{shortAddr(user.wallet)}</p>
               </div>
             </div>
           </div>
@@ -167,10 +200,10 @@ export function MidnightPassportCard({
         {/* Linked credentials */}
         <div className="relative mt-6">
           <div className="mb-2 flex items-center justify-between">
-            <p className="text-[9px] font-medium uppercase tracking-[0.18em] text-paper/50">
+            <p className="text-[9px] font-medium uppercase tracking-[0.18em] text-graphite">
               Linked to this passport
             </p>
-            <p className="font-mono text-[10px] text-paper/50">{linkedCount}/3</p>
+            <p className="font-mono text-[10px] text-graphite">{linkedCount}/3</p>
           </div>
           <div className="grid grid-cols-3 gap-2 sm:gap-2.5">
             <Credential
@@ -195,13 +228,36 @@ export function MidnightPassportCard({
         </div>
 
         {/* MRZ */}
-        <div className="relative mt-5 border-t border-white/10 pt-3 font-mono text-[10px] leading-relaxed tracking-[0.18em] text-paper/35 sm:text-[11px]">
+        <div className="relative mt-5 border-t border-fog pt-3 font-mono text-[10px] leading-relaxed tracking-[0.18em] text-graphite/60 sm:text-[11px]">
           <p className="truncate">{mrz(["P", "NIGHT", user.username])}</p>
           <p className="truncate">
             {mrz([number.replace(/-/g, ""), user.twitterUsername ? `X${user.twitterUsername}` : "", user.emailLinked ? "EMAIL" : ""])}
           </p>
         </div>
       </div>
+    </div>
+    {shareable ? (
+      <div className="mt-3 flex flex-wrap gap-2">
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => void onCopy()}
+          className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border border-fog bg-white/90 px-4 py-2.5 text-sm font-semibold text-ink transition-colors hover:border-graphite disabled:opacity-50"
+        >
+          {copied ? <CheckIcon className="h-4 w-4 text-signal" /> : <CopyIcon className="h-4 w-4" />}
+          {copied ? "Copied" : "Copy card"}
+        </button>
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => void onShare()}
+          className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-ink px-4 py-2.5 text-sm font-semibold text-paper shadow-[0_8px_20px_-12px_rgba(10,10,10,0.45)] transition-all duration-200 hover:bg-ink/90 active:scale-[0.98] disabled:opacity-50"
+        >
+          <XBrandIcon className="h-3.5 w-3.5" />
+          Share on X
+        </button>
+      </div>
+    ) : null}
     </div>
   );
 }

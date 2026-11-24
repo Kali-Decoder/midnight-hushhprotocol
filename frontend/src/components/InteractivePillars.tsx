@@ -6,7 +6,7 @@ import Reveal from "@/components/Reveal";
 const PILLARS = [
   {
     title: "Midnight Passport",
-    body: "Your X handle becomes your .night name, owned by a passkey. No seed phrase, no address to share.",
+    body: "Your X handle becomes your .night name, owned by a passkey. Link your email too. No seed phrase, no address to share.",
     mark: "≡",
   },
   {
@@ -16,7 +16,7 @@ const PILLARS = [
   },
   {
     title: "Pay a name",
-    body: "Pay alice.night or @alice. Hushh reads their passport keys from the Midnight registry for you.",
+    body: "Pay alice.night, @alice or her email. Hushh reads her passport keys from the Midnight registry for you.",
     mark: "@",
   },
 ] as const;
@@ -91,8 +91,9 @@ export default function InteractivePillars() {
         Privacy with honest limits
       </h2>
       <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-graphite sm:text-base">
-        Hushh Protocol hides the link between deposit and claim. It does not
-        hide that you used the pool.
+        Tips are sealed so only the recipient&apos;s passport can read them, and
+        no name, handle or email is written into a payment. Amounts, and which
+        deposit a claim spends, are public.
       </p>
       <div className="mt-12 grid gap-4 sm:grid-cols-3 sm:gap-5">
         {PILLARS.map((p, i) => (
