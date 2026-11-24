@@ -14,6 +14,7 @@ Tagline: send silently.
 |------|--------------|-------|
 | **Claim a passport** | A passkey (WebAuthn PRF) derives your keys. Your X handle becomes `<handle>.night`. No seed phrase. | `night_registry.register_name` |
 | **Link X** | The app signs you in with X (Privy). A server attester Jubjub-signs "x:handle belongs to name.night"; the contract checks the signature in-circuit. | `night_registry.link_social` |
+| **Link email** | Privy verifies the email with a one-time code; the attester signs "email belongs to name.night". Only a SHA-256 hash of the email goes on-chain, next to the X handle. | `night_registry.link_email` |
 | **Send** | Pay `alice.night` or `@alice`. The app reads her passport keys from the registry, seals the tip to her X25519 key, and deposits NIGHT in one transaction. | `hushh_vault.deposit` |
 | **Inbox** | Alice finds her tips by trial-decrypting the vault's on-chain inbox with her passport key. No backend inbox. | client-side scan |
 | **Claim** | A Compact circuit proves she knows the tip's secret and it was never claimed. NIGHT goes to her wallet. | `hushh_vault.claim` |
@@ -202,6 +203,7 @@ Scratch cards sent to an existing passport carry only the tip's commitment in th
 erDiagram
   NIGHT_REGISTRY ||--o{ NAME_RECORD : "names"
   NIGHT_REGISTRY ||--o{ SOCIAL_LINK : "socials"
+  NIGHT_REGISTRY ||--o{ EMAIL_LINK : "emails"
   HUSHH_VAULT ||--o{ TIP : "tips"
   HUSHH_VAULT ||--o{ INBOX_ENTRY : "inbox"
   NIGHT_REGISTRY {
@@ -214,9 +216,14 @@ erDiagram
     Field tip_pk "owner_key(tipKey)"
     Bytes32 enc_pk "X25519"
     Bytes32 social "x:handle or empty"
+    Bytes32 email "sha256 of email, or empty"
   }
   SOCIAL_LINK {
     Bytes32 social PK
+    Bytes32 name
+  }
+  EMAIL_LINK {
+    Bytes32 email_hash PK
     Bytes32 name
   }
   HUSHH_VAULT {
@@ -255,12 +262,14 @@ stateDiagram-v2
 | `update_keys` | `nameSecret` | caller owns the name | rotate `tip_pk` / `enc_pk` |
 | `link_social` | `nameSecret` | owns the name; Jubjub signature from the sealed attester over `(social, name)` | `socials[x:handle] = name`, previous holder unlinked |
 | `unlink_social` | `nameSecret` | owns the name, has a link | link removed |
+| `link_email` | `nameSecret` | owns the name; attester signature over `(email_hash, name)` with its own tag, so an X attestation cannot be replayed | `emails[sha256(email)] = name`, previous holder unlinked; X link untouched |
+| `unlink_email` | `nameSecret` | owns the name, has an email | email link removed |
 | `deposit` | none | amount > 0, commitment unused | NIGHT in, tip + inbox entry stored |
 | `claim` | `tipKey`, `rho` | commitment for `owner_key(tipKey), rho` exists; not claimed | tip marked claimed, NIGHT to recipient wallet |
 
 | Contract | Circuits | Largest prover key |
 |----------|----------|--------------------|
-| `night_registry` | `register_name`, `update_keys`, `link_social`, `unlink_social` | 4.2 MB (`link_social`, Jubjub Schnorr) |
+| `night_registry` | `register_name`, `update_keys`, `link_social`, `unlink_social`, `link_email`, `unlink_email` | 4.2 MB (`link_social` / `link_email`, Jubjub Schnorr) |
 | `hushh_vault` | `deposit`, `claim` | 0.9 MB |
 
 ## Repo layout
@@ -274,7 +283,7 @@ midnight/                Compact contracts, shared SDK, tests, localnet
   infra/                 Docker compose: node 2.1.101, indexer 4.4.101, proof server 9.0.2
 frontend/                Next.js 15 app (UI unchanged, Midnight data layer)
   src/lib/midnight/      config, wallet backends, passkey, passport, store, hooks
-  src/app/api/social/attest/route.ts   X attester
+  src/app/api/social/attest/route.ts   X + email attester
 ```
 
 ## Run it locally
