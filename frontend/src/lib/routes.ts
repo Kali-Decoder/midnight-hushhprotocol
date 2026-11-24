@@ -7,6 +7,7 @@ export const RESERVED_PATHS = new Set([
   "account",
   "register",
   "privacy",
+  "deploy",
   "claim",
   "c",
   "auth",
@@ -37,7 +38,8 @@ export function isAppShellPath(pathname: string): boolean {
     pathname.startsWith("/inbox") ||
     pathname.startsWith("/account") ||
     pathname.startsWith("/register") ||
-    pathname.startsWith("/claim")
+    pathname.startsWith("/claim") ||
+    pathname.startsWith("/deploy")
   ) {
     return true;
   }

@@ -98,18 +98,53 @@ export function detectWallets(): InitialAPI[] {
   return list.sort((a, b) => (a === m["1am"] ? -1 : b === m["1am"] ? 1 : 0));
 }
 
+function validUrl(raw: unknown, schemes: string[]): string | null {
+  if (typeof raw !== "string" || !raw) return null;
+  try {
+    const u = new URL(raw);
+    return schemes.includes(u.protocol) && u.host ? raw : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Network id + indexer endpoints from the wallet. Unlike midnight-js'
+ * dappConnectorNetwork this does not require substrateNodeUri: the wallet
+ * submits transactions itself, so the dApp never talks to the node (1AM can
+ * report an empty node URI). NEXT_PUBLIC_MIDNIGHT_INDEXER_URL / _WS_URL
+ * override or fill in the indexer. Errors name fields, never values (URLs can
+ * carry API tokens).
+ */
+async function connectorNetwork(api: {getConfiguration(): Promise<any>}) {
+  const cfg = await api.getConfiguration();
+  const networkId = String(cfg?.networkId ?? "").trim();
+  if (!networkId) throw new Error("The wallet did not report a network id.");
+  const queryURL =
+    validUrl(process.env.NEXT_PUBLIC_MIDNIGHT_INDEXER_URL, ["http:", "https:"]) ??
+    validUrl(cfg?.indexerUri, ["http:", "https:"]);
+  const subscriptionURL =
+    validUrl(process.env.NEXT_PUBLIC_MIDNIGHT_INDEXER_WS_URL, ["ws:", "wss:"]) ??
+    validUrl(cfg?.indexerWsUri, ["ws:", "wss:"]);
+  if (!queryURL || !subscriptionURL) {
+    throw new Error(
+      "The wallet did not report a usable indexer (indexerUri / indexerWsUri). Set NEXT_PUBLIC_MIDNIGHT_INDEXER_URL and NEXT_PUBLIC_MIDNIGHT_INDEXER_WS_URL.",
+    );
+  }
+  return {networkId, indexer: {queryURL, subscriptionURL}};
+}
+
 async function connectConnector(): Promise<WalletSession> {
   const [w] = detectWallets();
   if (!w) {
     throw new Error("No Midnight wallet found. Install 1AM or Lace and reload.");
   }
   const api = await w.connect(NETWORK_ID);
-  const [{dappConnectorNetwork, dappConnectorProofProvider, dappConnectorWalletProviders}, {CostModel}] =
-    await Promise.all([
-      import("@midnightntwrk/midnight-js-dapp-connector-proof-provider"),
-      import("@midnightntwrk/ledger-v9"),
-    ]);
-  const network = await dappConnectorNetwork(api);
+  const [{dappConnectorProofProvider, dappConnectorWalletProviders}, {CostModel}] = await Promise.all([
+    import("@midnightntwrk/midnight-js-dapp-connector-proof-provider"),
+    import("@midnightntwrk/ledger-v9"),
+  ]);
+  const network = await connectorNetwork(api);
   const {unshieldedAddress} = await api.getUnshieldedAddress();
   const {walletProvider, midnightProvider} = await dappConnectorWalletProviders(api);
   const publicDataProvider = indexerPublicDataProvider(network.indexer);

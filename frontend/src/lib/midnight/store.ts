@@ -287,3 +287,35 @@ export async function resolveSocialHandle(handle: string): Promise<NameRecord | 
     return null;
   }
 }
+
+// ── One-time contract deployment (the /deploy page) ──────────────────────────
+
+export interface DeployResult {
+  networkId: string;
+  registry: string;
+  vault: string;
+  deployer: string;
+  attesterPk: {x: string; y: string};
+}
+
+/**
+ * Deploy night_registry (with the attester public key) and hushh_vault from
+ * the connected wallet. The wallet proves, balances, pays DUST and signs; no
+ * key ever leaves it.
+ */
+export async function deployContracts(
+  attesterPk: {x: string; y: string},
+  onStep: (step: "registry" | "vault") => void,
+): Promise<DeployResult> {
+  const w = await connect();
+  onStep("registry");
+  const registry = await RegistryClient.deploy(
+    await w.providers("night_registry"),
+    compiledRegistry() as any,
+    nameSecret,
+    {x: BigInt(attesterPk.x), y: BigInt(attesterPk.y)},
+  );
+  onStep("vault");
+  const vault = await VaultClient.deploy(await w.providers("hushh_vault"), compiledVault() as any, vaultSecret);
+  return {networkId: w.networkId, registry: registry.address, vault: vault.address, deployer: w.address, attesterPk};
+}
