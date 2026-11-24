@@ -33,6 +33,11 @@ function step(s: Step) {
   toast.update(current.id, {sub: STEP_TEXT[s], step: STEP_INDEX[s], steps: 3});
 }
 
+/** Replace the step line while the current transaction waits (e.g. on 1AM's sponsor). */
+export function noteTxWaiting(text: string) {
+  if (current) toast.update(current.id, {sub: text});
+}
+
 function finish() {
   if (current) toast.dismiss(current.id);
   current = null;

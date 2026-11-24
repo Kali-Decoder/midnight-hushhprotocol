@@ -6,7 +6,7 @@
 //              (Wallet SDK) and pays every fee, like the Midnight Passport demo.
 //              Every user on the page shares its NIGHT. Never use beyond localnet.
 
-import {withTxProgress} from "./txProgress";
+import {noteTxWaiting, withTxProgress} from "./txProgress";
 import type {MidnightProviders} from "@midnightntwrk/midnight-js-types";
 import {FetchZkConfigProvider} from "@midnightntwrk/midnight-js-fetch-zk-config-provider";
 import {indexerPublicDataProvider} from "@midnightntwrk/midnight-js-indexer-public-data-provider";
@@ -144,6 +144,70 @@ function nodeRelayUrl(): URL | null {
   return u;
 }
 
+function errorText(e: unknown): string {
+  const parts: string[] = [];
+  let cur: any = e;
+  for (let i = 0; cur && i < 6; i++) {
+    parts.push(String(cur?.message ?? cur));
+    cur = cur?.cause;
+  }
+  return parts.join(" | ");
+}
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/**
+ * 1AM sponsors DUST for one transaction at a time and answers "A transaction
+ * is already pending" until the previous one confirms or expires. Back-to-back
+ * calls (claim a name, then link X) hit that, so wait and retry instead of
+ * failing. Nothing is sent while it refuses, so retrying is safe.
+ */
+function retryWhileSponsorBusy<W extends object>(walletProvider: W, maxMs = 180_000): W {
+  return new Proxy(walletProvider, {
+    get(target, prop, receiver) {
+      const v = Reflect.get(target, prop, receiver);
+      if (prop !== "balanceTx" || typeof v !== "function") return typeof v === "function" ? v.bind(target) : v;
+      return async (...args: unknown[]) => {
+        const started = Date.now();
+        for (;;) {
+          try {
+            return await v.apply(target, args);
+          } catch (e) {
+            const busy = /already pending/i.test(errorText(e));
+            const waited = Date.now() - started;
+            if (!busy || waited > maxMs) throw e;
+            noteTxWaiting(`Waiting for your previous transaction to clear (${Math.round(waited / 1000)}s)`);
+            await sleep(8_000);
+          }
+        }
+      };
+    },
+  });
+}
+
+/**
+ * Submit through the wallet first so 1AM sees its sponsored transaction land
+ * (and frees its one-at-a-time sponsor slot). If the wallet cannot submit
+ * (e.g. 1AM has no node endpoint: "WebSocket connection failed"), send it to
+ * the configured node instead.
+ */
+function walletFirstSubmit<M extends object>(walletSubmit: M, nodeSubmit: {submitTx: (tx: any) => Promise<any>}): M {
+  return new Proxy(walletSubmit, {
+    get(target, prop, receiver) {
+      const v = Reflect.get(target, prop, receiver);
+      if (prop !== "submitTx" || typeof v !== "function") return typeof v === "function" ? v.bind(target) : v;
+      return async (tx: unknown) => {
+        try {
+          return await v.call(target, tx);
+        } catch (e) {
+          console.warn("[hushh] wallet submit failed, sending to the node directly:", errorText(e));
+          return nodeSubmit.submitTx(tx);
+        }
+      };
+    },
+  });
+}
+
 /** A MidnightProvider that submits finalized transactions to the node directly. */
 async function nodeSubmitProvider() {
   const relayURL = nodeRelayUrl();
@@ -179,12 +243,15 @@ async function connectConnector(): Promise<WalletSession> {
   ]);
   const network = await connectorNetwork(api);
   const {unshieldedAddress} = await api.getUnshieldedAddress();
-  const {walletProvider, midnightProvider: walletSubmit} = await dappConnectorWalletProviders(api);
-  // The wallet proves, balances and signs. Submission goes straight to the
-  // configured node when there is one: 1AM can be left without a node
-  // endpoint, and then its own submitTransaction fails with
-  // "WebSocket connection failed".
-  const midnightProvider = (await nodeSubmitProvider()) ?? walletSubmit;
+  const connector = await dappConnectorWalletProviders(api);
+  // The wallet proves, balances (DUST / sponsorship) and signs.
+  const walletProvider = retryWhileSponsorBusy(connector.walletProvider);
+  // Submit via the wallet, falling back to the configured node when the
+  // wallet has no working node connection.
+  const nodeSubmit = await nodeSubmitProvider();
+  const midnightProvider = nodeSubmit
+    ? walletFirstSubmit(connector.midnightProvider, nodeSubmit as any)
+    : connector.midnightProvider;
   const publicDataProvider = indexerPublicDataProvider(network.indexer);
   const privateStateProvider = memoryPrivateState();
   const cache = new Map<ContractName, Promise<MidnightProviders>>();
