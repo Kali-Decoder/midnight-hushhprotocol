@@ -186,13 +186,14 @@ function retryWhileSponsorBusy<W extends object>(walletProvider: W, maxMs = 180_
 }
 
 /**
- * Submit through the wallet first so 1AM sees its sponsored transaction land
- * (and frees its one-at-a-time sponsor slot). If the wallet cannot submit
- * (e.g. 1AM has no node endpoint: "WebSocket connection failed"), send it to
- * the configured node instead.
+ * Submit to the configured node (Blockfrost on preprod) and only fall back to
+ * the wallet's own submit if that fails. 1AM can be left without a node
+ * connection, and then its submitTransaction pops "Submit Transaction failed:
+ * WebSocket connection failed" even though the app could have sent the
+ * transaction itself.
  */
-function walletFirstSubmit<M extends object>(walletSubmit: M, nodeSubmit: {submitTx: (tx: any) => Promise<any>}): M {
-  return new Proxy(walletSubmit, {
+function nodeFirstSubmit<M extends object>(nodeSubmit: M, walletSubmit: {submitTx: (tx: any) => Promise<any>}): M {
+  return new Proxy(nodeSubmit, {
     get(target, prop, receiver) {
       const v = Reflect.get(target, prop, receiver);
       if (prop !== "submitTx" || typeof v !== "function") return typeof v === "function" ? v.bind(target) : v;
@@ -200,8 +201,8 @@ function walletFirstSubmit<M extends object>(walletSubmit: M, nodeSubmit: {submi
         try {
           return await v.call(target, tx);
         } catch (e) {
-          console.warn("[hushh] wallet submit failed, sending to the node directly:", errorText(e));
-          return nodeSubmit.submitTx(tx);
+          console.warn("[hushh] node submit failed, asking the wallet to submit:", errorText(e));
+          return walletSubmit.submitTx(tx);
         }
       };
     },
@@ -246,11 +247,10 @@ async function connectConnector(): Promise<WalletSession> {
   const connector = await dappConnectorWalletProviders(api);
   // The wallet proves, balances (DUST / sponsorship) and signs.
   const walletProvider = retryWhileSponsorBusy(connector.walletProvider);
-  // Submit via the wallet, falling back to the configured node when the
-  // wallet has no working node connection.
+  // Submit to the configured node; the wallet's own submit is the fallback.
   const nodeSubmit = await nodeSubmitProvider();
   const midnightProvider = nodeSubmit
-    ? walletFirstSubmit(connector.midnightProvider, nodeSubmit as any)
+    ? nodeFirstSubmit(nodeSubmit, connector.midnightProvider as any)
     : connector.midnightProvider;
   const publicDataProvider = indexerPublicDataProvider(network.indexer);
   const privateStateProvider = memoryPrivateState();
