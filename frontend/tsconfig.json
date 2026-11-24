@@ -31,7 +31,11 @@
       ],
       "@hushh/sdk/*": [
         "../midnight/src/sdk/*"
-      ]
+      ],
+      "@midnight-ntwrk/compact-runtime": ["./node_modules/@midnight-ntwrk/compact-runtime"],
+      "@midnightntwrk/midnight-js-contracts": ["./node_modules/@midnightntwrk/midnight-js-contracts"],
+      "@noble/hashes/*": ["./node_modules/@noble/hashes/*"],
+      "tweetnacl": ["./node_modules/tweetnacl"]
     }
   },
   "include": [
