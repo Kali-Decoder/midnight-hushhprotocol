@@ -18,6 +18,13 @@ export const metadata: Metadata = {
   title: "Hushh Protocol · send silently.",
   description:
     "Own your .night name, link your X, and send NIGHT on Midnight. Tips are sealed to the recipient and claimed with a zero-knowledge proof.",
+  twitter: {
+    card: "summary",
+    site: "@hushhprotocol",
+    creator: "@hushhprotocol",
+    title: "Hushh Protocol · send silently.",
+    description: "Own a .night name with Midnight Passport, link your X and email, and get paid privately in NIGHT.",
+  },
 };
 
 export const viewport: Viewport = {
