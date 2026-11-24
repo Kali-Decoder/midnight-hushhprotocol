@@ -39,6 +39,7 @@ export function passportTweetText(u: PublicUser): string {
 
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
+    setTimeout(() => reject(new Error(`timeout_image:${src}`)), 4000);
     const img = new Image();
     img.crossOrigin = "anonymous";
     img.onload = () => resolve(img);
@@ -73,7 +74,8 @@ export async function renderPassportPng(u: PublicUser, opts: {network: string}):
   canvas.height = H;
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("canvas_unavailable");
-  await document.fonts?.ready;
+  // Fonts are almost always loaded already; never let a stuck load block sharing.
+  await Promise.race([document.fonts?.ready, new Promise((r) => setTimeout(r, 1000))]);
 
   const avatar = getAvatarByAddress(u.wallet);
   const [mid, hushh, face] = await Promise.all([
