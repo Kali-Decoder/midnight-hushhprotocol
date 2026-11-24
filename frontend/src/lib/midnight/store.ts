@@ -34,6 +34,7 @@ import {
   contractsConfigured,
 } from "./config";
 import {connectWallet, type WalletSession} from "./wallet";
+import {labelNextTx} from "./txProgress";
 import type {PasskeyRef} from "./passkey";
 
 export type WalletStatus = "disconnected" | "connecting" | "connected";
@@ -320,6 +321,7 @@ export async function deployContracts(
 ): Promise<DeployResult> {
   const w = await connect();
   onStep("registry");
+  labelNextTx("Deploying night_registry");
   const registry = await RegistryClient.deploy(
     await w.providers("night_registry"),
     compiledRegistry() as any,
@@ -327,6 +329,7 @@ export async function deployContracts(
     {x: BigInt(attesterPk.x), y: BigInt(attesterPk.y)},
   );
   onStep("vault");
+  labelNextTx("Deploying hushh_vault");
   const vault = await VaultClient.deploy(await w.providers("hushh_vault"), compiledVault() as any, vaultSecret);
   return {networkId: w.networkId, registry: registry.address, vault: vault.address, deployer: w.address, attesterPk};
 }

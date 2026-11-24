@@ -57,6 +57,7 @@ export function DeployPanel() {
       console.error("[hushh] deploy failed", e);
       setStep("idle");
       setError(errorChain(e));
+      toast.error(e);
     }
   }
 

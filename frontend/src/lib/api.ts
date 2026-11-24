@@ -27,6 +27,7 @@ import {
   resolveSocialHandle,
 } from "@/lib/midnight/store";
 import {listSent, recordSent} from "@/lib/sentLog";
+import {labelNextTx} from "@/lib/midnight/txProgress";
 
 // ── Users ────────────────────────────────────────────────────────────────────
 
@@ -65,6 +66,7 @@ export async function resolveUser(username: string): Promise<PublicUser | null> 
 
 export async function registerName(name: string, keys: PassportKeys): Promise<{txId: string}> {
   const {registry} = await getClients();
+  labelNextTx(`Claiming ${normalizeName(name)}.night`);
   const r = await registry.register(normalizeName(name), keys);
   await refreshProfile();
   return r;
@@ -103,6 +105,7 @@ export async function linkTwitter(params: {
     handle: params.handle,
   });
   const {registry} = await getClients();
+  labelNextTx(`Linking @${attestation.social.replace(/^x:/, "")} to ${params.name}.night`);
   const r = await registry.linkSocial(params.keys, attestation);
   await refreshProfile();
   return {txId: r.txId, handle: attestation.social.replace(/^x:/, "")};
@@ -110,6 +113,7 @@ export async function linkTwitter(params: {
 
 export async function unlinkTwitter(name: string, keys: PassportKeys): Promise<{txId: string}> {
   const {registry} = await getClients();
+  labelNextTx(`Disconnecting X from ${name}.night`);
   const r = await registry.unlinkSocial(name, keys);
   await refreshProfile();
   return r;
@@ -148,6 +152,7 @@ export async function linkEmailAddress(params: {
     email: params.email,
   });
   const {registry} = await getClients();
+  labelNextTx(`Linking ${attestation.email} to ${params.name}.night`);
   const r = await registry.linkEmail(params.keys, attestation);
   await refreshProfile();
   return {txId: r.txId, email: attestation.email};
@@ -155,6 +160,7 @@ export async function linkEmailAddress(params: {
 
 export async function unlinkEmailAddress(name: string, keys: PassportKeys): Promise<{txId: string}> {
   const {registry} = await getClients();
+  labelNextTx(`Disconnecting email from ${name}.night`);
   const r = await registry.unlinkEmail(name, keys);
   await refreshProfile();
   return r;
@@ -171,6 +177,7 @@ export interface SentResult {
 export async function sendTip(to: PublicUser, units: bigint): Promise<SentResult> {
   if (!to.tipPk) throw new Error("Recipient has no tip key.");
   const {vault} = await getClients();
+  labelNextTx(`Sending ${fromTokenUnits(units, NIGHT_DECIMALS)} NIGHT to @${to.username}`);
   const r = await vault.sendTip(units, {
     tipPk: BigInt(to.tipPk),
     boxPk: hexToBytes(to.bulletPublicKey),
@@ -193,6 +200,7 @@ export async function sendLinkTip(
   buildUrl: (linkSecret: string) => string,
 ): Promise<SentResult & {claimUrl: string}> {
   const {vault} = await getClients();
+  labelNextTx(`Creating a ${fromTokenUnits(units, NIGHT_DECIMALS)} NIGHT claim link`);
   const r = await vault.sendLink(units);
   const commitment = commitmentHex(r.commitment);
   const claimUrl = buildUrl(encodeLinkSecret(r.linkSecret));
@@ -219,6 +227,7 @@ export async function claimTip(tip: OwnedTip, keys: PassportKeys): Promise<{txId
   const {vault} = await getClients();
   const w = getState().wallet;
   if (!w) throw new Error("Connect a wallet to receive the NIGHT.");
+  labelNextTx(`Claiming ${fromTokenUnits(tip.amount, NIGHT_DECIMALS)} NIGHT`);
   return vault.claim(tip, keys.tipKey, w.addressBytes);
 }
 
@@ -235,6 +244,7 @@ export async function claimLinkTip(encodedSecret: string): Promise<{txId: string
   const {tip, tipKey} = await vault.linkTip(decodeLinkSecret(encodedSecret));
   if (!tip) throw new Error("This link's tip was not found on-chain yet. Try again in a few seconds.");
   if (tip.claimed) throw new Error("This tip was already claimed.");
+  labelNextTx(`Claiming ${fromTokenUnits(tip.amount, NIGHT_DECIMALS)} NIGHT`);
   const r = await vault.claim(tip, tipKey, w.addressBytes);
   return {txId: r.txId, amount: tip.amount};
 }

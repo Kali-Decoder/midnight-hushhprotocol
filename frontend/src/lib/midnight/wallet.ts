@@ -6,6 +6,7 @@
 //              (Wallet SDK) and pays every fee, like the Midnight Passport demo.
 //              Every user on the page shares its NIGHT. Never use beyond localnet.
 
+import {withTxProgress} from "./txProgress";
 import type {MidnightProviders} from "@midnightntwrk/midnight-js-types";
 import {FetchZkConfigProvider} from "@midnightntwrk/midnight-js-fetch-zk-config-provider";
 import {indexerPublicDataProvider} from "@midnightntwrk/midnight-js-indexer-public-data-provider";
@@ -336,8 +337,12 @@ async function connectDevWallet(): Promise<WalletSession> {
   };
 }
 
-export function connectWallet(): Promise<WalletSession> {
-  return WALLET_MODE === "dev" ? connectDevWallet() : connectConnector();
+export async function connectWallet(): Promise<WalletSession> {
+  const session = await (WALLET_MODE === "dev" ? connectDevWallet() : connectConnector());
+  const raw = session.providers.bind(session);
+  // Every contract call reports prove -> wallet -> submit progress.
+  session.providers = async (contract) => withTxProgress(await raw(contract));
+  return session;
 }
 
 export function walletAvailable(): boolean {

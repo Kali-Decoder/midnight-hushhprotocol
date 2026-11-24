@@ -10,6 +10,8 @@ import {ErrorBanner, Panel} from "@/components/ui";
 import {claimLinkTip, claimTip, listInbox} from "@/lib/api";
 import {explorerTx, NETWORK_NAME} from "@/lib/config";
 import {formatError} from "@/lib/errors";
+import {toast} from "@/lib/toast";
+import {celebrateUsernameClaim} from "@/lib/celebrate";
 import {getState} from "@/lib/midnight/store";
 import {decodeScratchClaimPayload, rememberOpenedGift} from "@/lib/scratchGift";
 
@@ -75,10 +77,13 @@ export function ClaimView({encoded}: {encoded: string}) {
         setTxHash(hash);
         setClaimStep("done");
         setDone(true);
+        toast.success(`Gift claimed. ${claimPayload.amountLabel ?? ""} ${claimPayload.tokenSymbol ?? "NIGHT"} is on its way to your wallet.`.replace(/\s+/g, " "));
+        celebrateUsernameClaim();
       } catch (e) {
         if (cancelled) return;
         setClaimStep("error");
         setError(formatError(e));
+        toast.error(e);
       }
     }
 
