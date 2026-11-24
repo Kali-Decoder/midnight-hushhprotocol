@@ -1,5 +1,8 @@
 /** App path segments that must not be treated as usernames. */
 export const RESERVED_PATHS = new Set([
+  // Pages that exist
+  "passport",
+  "protocol",
   "send",
   "scratch",
   "inbox",
@@ -14,6 +17,21 @@ export const RESERVED_PATHS = new Set([
   "api",
   "favicon.ico",
   "_next",
+  // Likely future pages / common links: never let a profile claim them
+  "about",
+  "docs",
+  "help",
+  "profile",
+  "settings",
+  "login",
+  "logout",
+  "signin",
+  "signup",
+  "terms",
+  "whitepaper",
+  "admin",
+  "home",
+  "app",
 ]);
 
 export function normalizeUsernameParam(raw: string): string {

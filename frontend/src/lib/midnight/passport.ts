@@ -12,6 +12,14 @@ import {
   type PasskeyRef,
 } from "./passkey";
 import {getState, remember, resolveName, unlock, type RememberedPassport} from "./store";
+import {isReservedPath} from "@/lib/routes";
+
+/** Names that are app pages (/passport, /send…): a profile there could never be reached. */
+function assertClaimable(name: string) {
+  if (isReservedPath(name)) {
+    throw new Error(`${name}.night is reserved by the app. Pick another name.`);
+  }
+}
 
 /** Passphrase mode: no WebAuthn, or forced with ?passport=passphrase (demos, CI). */
 export function usePassphrase(): boolean {
@@ -59,6 +67,7 @@ async function existingSecret(rem: RememberedPassport | null, name?: string) {
  */
 export async function claimPassport(rawName: string): Promise<{keys: PassportKeys; profile: NameRecord; txId?: string}> {
   const name = normalizeName(rawName);
+  assertClaimable(name);
   // Already registered? Then this is a returning user on a new device: use
   // their existing passkey instead of minting a second one.
   if (await resolveName(name)) {
@@ -105,6 +114,7 @@ export async function signInPassport(
   const wanted = rem?.name ?? name;
   if (!wanted) return res;
   const n = normalizeName(wanted);
+  assertClaimable(n);
   if (await resolveName(n)) {
     throw new Error(
       `${n}.night belongs to another passport on this registry. Claim a new name with your X handle.`,

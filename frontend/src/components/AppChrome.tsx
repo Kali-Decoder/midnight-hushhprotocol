@@ -11,7 +11,7 @@ import {isAppShellPath} from "@/lib/routes";
 export function AppChrome({children}: {children: ReactNode}) {
   const pathname = usePathname();
   const app = isAppShellPath(pathname);
-  const landing = pathname === "/";
+  const landing = pathname === "/" || pathname === "/passport" || pathname === "/protocol";
   const studio = pathname.startsWith("/scratch");
 
   const mainWidth = landing || studio ? "max-w-7xl" : "max-w-5xl";
@@ -64,6 +64,12 @@ export function AppChrome({children}: {children: ReactNode}) {
             >
               Whitepaper
             </a>
+            <Link href="/passport" className="transition-colors hover:text-ink">
+              Passport
+            </Link>
+            <Link href="/protocol" className="transition-colors hover:text-ink">
+              Protocol
+            </Link>
             <Link href="/privacy" className="transition-colors hover:text-ink">
               Privacy
             </Link>
