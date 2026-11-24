@@ -7,7 +7,8 @@ import {PrivyLogoutBridge} from "@/components/PrivyLogoutBridge";
 const PRIVY_APP_ID = process.env.NEXT_PUBLIC_PRIVY_APP_ID || "";
 
 /**
- * Twitter-only Privy auth, used to prove an X handle before it is linked to a .night name.
+ * Privy auth (X OAuth + email one-time code), used to prove an X handle or an
+ * email before it is linked to a .night name.
  */
 export function PrivyAppProvider({children}: {children: ReactNode}) {
   if (!PRIVY_APP_ID) {
@@ -18,7 +19,7 @@ export function PrivyAppProvider({children}: {children: ReactNode}) {
     <PrivyProvider
       appId={PRIVY_APP_ID}
       config={{
-        loginMethods: ["twitter"],
+        loginMethods: ["twitter", "email"],
         appearance: {
           theme: "light",
           accentColor: "#0a0a0a",

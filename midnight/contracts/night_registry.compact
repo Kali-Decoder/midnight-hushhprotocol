@@ -12,7 +12,9 @@ import CompactStandardLibrary;
 //   enc_pk  the X25519 key tip ciphertexts are sealed to
 //
 // Social links (e.g. an X handle) are public by design: they exist so people
-// can pay "@handle". A link needs an attestation from the registry's social
+// can pay "@handle". An email link stores only email_hash (SHA-256 of the
+// normalised address, computed off-chain) so the address is not readable
+// on-chain; anyone who already knows an email can still check it. A link needs an attestation from the registry's social
 // attester (a Jubjub key held by the OAuth-checking service), verified
 // in-circuit with the native jubjubSchnorrVerify. Jubjub is Midnight's
 // embedded curve, so this stays a small circuit (secp256k1 ECDSA here was a
@@ -24,11 +26,13 @@ struct NameRecord {
   tip_pk: Field;
   enc_pk: Bytes<32>;
   social: Bytes<32>;
+  email: Bytes<32>;
   index: Uint<64>;
 }
 
 export ledger names: Map<Bytes<32>, NameRecord>;
 export ledger socials: Map<Bytes<32>, Bytes<32>>;
+export ledger emails: Map<Bytes<32>, Bytes<32>>;
 export ledger name_count: Uint<64>;
 export sealed ledger attester: JubjubPoint;
 
@@ -50,6 +54,13 @@ export pure circuit attestation_message(social: Bytes<32>, name: Bytes<32>): Fie
   );
 }
 
+// Separate tag so an X attestation can never be replayed as an email one.
+export pure circuit email_attestation_message(email_hash: Bytes<32>, name: Bytes<32>): Field {
+  return transientHash<[Bytes<32>, Bytes<32>, Bytes<32>]>(
+    [pad(32, "hushh:email-attest:v1"), email_hash, name]
+  );
+}
+
 circuit require_owner(name: Bytes<32>): NameRecord {
   assert(names.member(name), "unknown name");
   const r = names.lookup(name);
@@ -66,6 +77,7 @@ export circuit register_name(name: Bytes<32>, tip_pk: Field, enc_pk: Bytes<32>):
     tip_pk: disclose(tip_pk),
     enc_pk:   disclose(enc_pk),
     social:   default<Bytes<32>>,
+    email:    default<Bytes<32>>,
     index:    name_count,
   });
   name_count = (name_count + (1 as Uint<64>)) as Uint<64>;
@@ -80,6 +92,7 @@ export circuit update_keys(name: Bytes<32>, tip_pk: Field, enc_pk: Bytes<32>): [
     tip_pk: disclose(tip_pk),
     enc_pk:   disclose(enc_pk),
     social:   r.social,
+    email:    r.email,
     index:    r.index,
   });
 }
@@ -105,7 +118,7 @@ export circuit link_social(
         const p = names.lookup(prev);
         names.insert(prev, NameRecord {
           owner: p.owner, tip_pk: p.tip_pk, enc_pk: p.enc_pk,
-          social: default<Bytes<32>>, index: p.index,
+          social: default<Bytes<32>>, email: p.email, index: p.index,
         });
       }
     }
@@ -119,7 +132,7 @@ export circuit link_social(
   socials.insert(s, n);
   names.insert(n, NameRecord {
     owner: r.owner, tip_pk: r.tip_pk, enc_pk: r.enc_pk,
-    social: s, index: r.index,
+    social: s, email: r.email, index: r.index,
   });
 }
 
@@ -130,6 +143,58 @@ export circuit unlink_social(name: Bytes<32>): [] {
   socials.remove(r.social);
   names.insert(n, NameRecord {
     owner: r.owner, tip_pk: r.tip_pk, enc_pk: r.enc_pk,
-    social: default<Bytes<32>>, index: r.index,
+    social: default<Bytes<32>>, email: r.email, index: r.index,
+  });
+}
+
+// Email links mirror X links: one verified email per name, one name per
+// email, attested by the same attester (which checked the email via OTP).
+export circuit link_email(
+  name: Bytes<32>,
+  email_hash: Bytes<32>,
+  sig: JubjubSchnorrSignature,
+): [] {
+  const n = disclose(name);
+  const e = disclose(email_hash);
+  assert(e != default<Bytes<32>>, "empty email");
+  const r = require_owner(n);
+
+  const msg: Vector<1, Field> = [email_attestation_message(e, n)];
+  assert(jubjubSchnorrVerify<1>(msg, disclose(sig), attester), "bad attestation");
+
+  // The email moves to this name; the previous holder loses it.
+  if (emails.member(e)) {
+    const prev = emails.lookup(e);
+    if (prev != n) {
+      if (names.member(prev)) {
+        const p = names.lookup(prev);
+        names.insert(prev, NameRecord {
+          owner: p.owner, tip_pk: p.tip_pk, enc_pk: p.enc_pk,
+          social: p.social, email: default<Bytes<32>>, index: p.index,
+        });
+      }
+    }
+  }
+  // This name drops any older email it had.
+  if (r.email != default<Bytes<32>>) {
+    if (r.email != e) {
+      emails.remove(r.email);
+    }
+  }
+  emails.insert(e, n);
+  names.insert(n, NameRecord {
+    owner: r.owner, tip_pk: r.tip_pk, enc_pk: r.enc_pk,
+    social: r.social, email: e, index: r.index,
+  });
+}
+
+export circuit unlink_email(name: Bytes<32>): [] {
+  const n = disclose(name);
+  const r = require_owner(n);
+  assert(r.email != default<Bytes<32>>, "no email linked");
+  emails.remove(r.email);
+  names.insert(n, NameRecord {
+    owner: r.owner, tip_pk: r.tip_pk, enc_pk: r.enc_pk,
+    social: r.social, email: default<Bytes<32>>, index: r.index,
   });
 }

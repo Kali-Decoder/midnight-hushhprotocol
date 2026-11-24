@@ -20,6 +20,10 @@ export interface PublicUser {
   bulletPublicKey: string;
   /** Linked X handle (no @), proven on-chain by an attestation. */
   twitterUsername?: string | null;
+  /** True when a verified email is linked (only its hash is on-chain). */
+  emailLinked?: boolean;
+  /** Registration order in the night_registry (0-based). */
+  index?: number;
   /** Vault owner key tips are bound to (decimal Field). */
   tipPk?: string;
   createdAt?: string | Date;

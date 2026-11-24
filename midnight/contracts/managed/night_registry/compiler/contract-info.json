@@ -46,6 +46,30 @@
       }
     },
     {
+      "name": "email_attestation_message",
+      "pure": true,
+      "proof": false,
+      "arguments": [
+        {
+          "name": "email_hash",
+          "type": {
+            "type-name": "Bytes",
+            "length": 32
+          }
+        },
+        {
+          "name": "name",
+          "type": {
+            "type-name": "Bytes",
+            "length": 32
+          }
+        }
+      ],
+      "result-type": {
+        "type-name": "Field"
+      }
+    },
+    {
       "name": "register_name",
       "pure": false,
       "proof": true,
@@ -174,6 +198,72 @@
         "types": [
         ]
       }
+    },
+    {
+      "name": "link_email",
+      "pure": false,
+      "proof": true,
+      "arguments": [
+        {
+          "name": "name",
+          "type": {
+            "type-name": "Bytes",
+            "length": 32
+          }
+        },
+        {
+          "name": "email_hash",
+          "type": {
+            "type-name": "Bytes",
+            "length": 32
+          }
+        },
+        {
+          "name": "sig",
+          "type": {
+            "type-name": "Struct",
+            "name": "JubjubSchnorrSignature",
+            "elements": [
+              {
+                "name": "announcement",
+                "type": {
+                  "type-name": "JubjubPoint"
+                }
+              },
+              {
+                "name": "response",
+                "type": {
+                  "type-name": "Field"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "result-type": {
+        "type-name": "Tuple",
+        "types": [
+        ]
+      }
+    },
+    {
+      "name": "unlink_email",
+      "pure": false,
+      "proof": true,
+      "arguments": [
+        {
+          "name": "name",
+          "type": {
+            "type-name": "Bytes",
+            "length": 32
+          }
+        }
+      ],
+      "result-type": {
+        "type-name": "Tuple",
+        "types": [
+        ]
+      }
     }
   ],
   "witnesses": [
@@ -230,6 +320,13 @@
             }
           },
           {
+            "name": "email",
+            "type": {
+              "type-name": "Bytes",
+              "length": 32
+            }
+          },
+          {
             "name": "index",
             "type": {
               "type-name": "Uint",
@@ -254,8 +351,22 @@
       }
     },
     {
-      "name": "name_count",
+      "name": "emails",
       "index": 2,
+      "exported": true,
+      "storage": "Map",
+      "key": {
+        "type-name": "Bytes",
+        "length": 32
+      },
+      "value": {
+        "type-name": "Bytes",
+        "length": 32
+      }
+    },
+    {
+      "name": "name_count",
+      "index": 3,
       "exported": true,
       "storage": "Cell",
       "type": {
@@ -265,7 +376,7 @@
     },
     {
       "name": "attester",
-      "index": 3,
+      "index": 4,
       "exported": true,
       "storage": "Cell",
       "type": {

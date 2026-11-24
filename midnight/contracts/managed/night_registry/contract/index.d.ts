@@ -20,6 +20,13 @@ export type ImpureCircuits<PS> = {
                        response: bigint
                      }): Promise<__compactRuntime.CircuitResults<PS, []>>;
   unlink_social(context: __compactRuntime.CircuitContext<PS>, name_0: Uint8Array): Promise<__compactRuntime.CircuitResults<PS, []>>;
+  link_email(context: __compactRuntime.CircuitContext<PS>,
+             name_0: Uint8Array,
+             email_hash_0: Uint8Array,
+             sig_0: { announcement: __compactRuntime.JubjubPoint,
+                      response: bigint
+                    }): Promise<__compactRuntime.CircuitResults<PS, []>>;
+  unlink_email(context: __compactRuntime.CircuitContext<PS>, name_0: Uint8Array): Promise<__compactRuntime.CircuitResults<PS, []>>;
 }
 
 export type ProvableCircuits<PS> = {
@@ -38,11 +45,19 @@ export type ProvableCircuits<PS> = {
                        response: bigint
                      }): Promise<__compactRuntime.CircuitResults<PS, []>>;
   unlink_social(context: __compactRuntime.CircuitContext<PS>, name_0: Uint8Array): Promise<__compactRuntime.CircuitResults<PS, []>>;
+  link_email(context: __compactRuntime.CircuitContext<PS>,
+             name_0: Uint8Array,
+             email_hash_0: Uint8Array,
+             sig_0: { announcement: __compactRuntime.JubjubPoint,
+                      response: bigint
+                    }): Promise<__compactRuntime.CircuitResults<PS, []>>;
+  unlink_email(context: __compactRuntime.CircuitContext<PS>, name_0: Uint8Array): Promise<__compactRuntime.CircuitResults<PS, []>>;
 }
 
 export type PureCircuits = {
   name_owner_key(sk_0: Uint8Array): bigint;
   attestation_message(social_0: Uint8Array, name_0: Uint8Array): bigint;
+  email_attestation_message(email_hash_0: Uint8Array, name_0: Uint8Array): bigint;
 }
 
 export type Circuits<PS> = {
@@ -50,6 +65,9 @@ export type Circuits<PS> = {
   attestation_message(context: __compactRuntime.CircuitContext<PS>,
                       social_0: Uint8Array,
                       name_0: Uint8Array): Promise<__compactRuntime.CircuitResults<PS, bigint>>;
+  email_attestation_message(context: __compactRuntime.CircuitContext<PS>,
+                            email_hash_0: Uint8Array,
+                            name_0: Uint8Array): Promise<__compactRuntime.CircuitResults<PS, bigint>>;
   register_name(context: __compactRuntime.CircuitContext<PS>,
                 name_0: Uint8Array,
                 tip_pk_0: bigint,
@@ -65,6 +83,13 @@ export type Circuits<PS> = {
                        response: bigint
                      }): Promise<__compactRuntime.CircuitResults<PS, []>>;
   unlink_social(context: __compactRuntime.CircuitContext<PS>, name_0: Uint8Array): Promise<__compactRuntime.CircuitResults<PS, []>>;
+  link_email(context: __compactRuntime.CircuitContext<PS>,
+             name_0: Uint8Array,
+             email_hash_0: Uint8Array,
+             sig_0: { announcement: __compactRuntime.JubjubPoint,
+                      response: bigint
+                    }): Promise<__compactRuntime.CircuitResults<PS, []>>;
+  unlink_email(context: __compactRuntime.CircuitContext<PS>, name_0: Uint8Array): Promise<__compactRuntime.CircuitResults<PS, []>>;
 }
 
 export type Ledger = {
@@ -76,16 +101,25 @@ export type Ledger = {
                                  tip_pk: bigint,
                                  enc_pk: Uint8Array,
                                  social: Uint8Array,
+                                 email: Uint8Array,
                                  index: bigint
                                };
     [Symbol.iterator](): Iterator<[Uint8Array, { owner: bigint,
   tip_pk: bigint,
   enc_pk: Uint8Array,
   social: Uint8Array,
+  email: Uint8Array,
   index: bigint
 }]>
   };
   socials: {
+    isEmpty(): boolean;
+    size(): bigint;
+    member(key_0: Uint8Array): boolean;
+    lookup(key_0: Uint8Array): Uint8Array;
+    [Symbol.iterator](): Iterator<[Uint8Array, Uint8Array]>
+  };
+  emails: {
     isEmpty(): boolean;
     size(): bigint;
     member(key_0: Uint8Array): boolean;

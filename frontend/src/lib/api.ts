@@ -8,6 +8,7 @@ import {
   hexToBytes,
   normalizeName,
   type Attestation,
+  type EmailAttestation,
   type NameRecord,
   type OwnedTip,
   type PassportKeys,
@@ -21,6 +22,7 @@ import {
   getState,
   readVault,
   refreshProfile,
+  resolveEmailAddress,
   resolveName,
   resolveSocialHandle,
 } from "@/lib/midnight/store";
@@ -35,15 +37,23 @@ export function toPublicUser(r: NameRecord, wallet?: string): PublicUser {
     username: r.name,
     bulletPublicKey: `0x${bytesToHex(r.boxPk)}`,
     twitterUsername: r.social?.startsWith("x:") ? r.social.slice(2) : null,
+    emailLinked: !!r.emailHash,
+    index: Number(r.index),
     tipPk: r.tipPk.toString(),
   };
 }
 
+const looksLikeEmail = (s: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s.trim());
+
 /**
- * Resolve "@alice" / "alice" / "alice.night": a linked X handle first, then a
- * .night name. Returns null when nobody owns it.
+ * Resolve "@alice" / "alice" / "alice.night" / "ada@example.com": a linked
+ * email or X handle first, then a .night name. Returns null when nobody owns it.
  */
 export async function resolveUser(username: string): Promise<PublicUser | null> {
+  if (looksLikeEmail(username)) {
+    const byEmail = await resolveEmailAddress(username);
+    return byEmail ? toPublicUser(byEmail) : null;
+  }
   const clean = username.trim().toLowerCase().replace(/^@/, "");
   if (!clean) return null;
   const bySocial = clean.endsWith(".night") ? null : await resolveSocialHandle(clean);
@@ -101,6 +111,51 @@ export async function linkTwitter(params: {
 export async function unlinkTwitter(name: string, keys: PassportKeys): Promise<{txId: string}> {
   const {registry} = await getClients();
   const r = await registry.unlinkSocial(name, keys);
+  await refreshProfile();
+  return r;
+}
+
+/** Ask the attester to sign "<email> belongs to <name>.night". */
+export async function requestEmailAttestation(params: {
+  name: string;
+  privyAccessToken?: string;
+  /** Only honoured by an attester running in dev mode (no Privy). */
+  email?: string;
+}): Promise<EmailAttestation> {
+  // Send only what the attester needs. Never forward passport keys.
+  const body: Record<string, string> = {name: params.name, kind: "email"};
+  if (params.privyAccessToken) body.privyAccessToken = params.privyAccessToken;
+  if (params.email) body.email = params.email;
+  const res = await fetch("/api/social/attest", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify(body),
+  });
+  const data = (await res.json().catch(() => ({}))) as EmailAttestation & {error?: string};
+  if (!res.ok) throw new Error(data.error || `attestation failed (${res.status})`);
+  return data;
+}
+
+export async function linkEmailAddress(params: {
+  name: string;
+  keys: PassportKeys;
+  privyAccessToken?: string;
+  email?: string;
+}): Promise<{txId: string; email: string}> {
+  const attestation = await requestEmailAttestation({
+    name: params.name,
+    privyAccessToken: params.privyAccessToken,
+    email: params.email,
+  });
+  const {registry} = await getClients();
+  const r = await registry.linkEmail(params.keys, attestation);
+  await refreshProfile();
+  return {txId: r.txId, email: attestation.email};
+}
+
+export async function unlinkEmailAddress(name: string, keys: PassportKeys): Promise<{txId: string}> {
+  const {registry} = await getClients();
+  const r = await registry.unlinkEmail(name, keys);
   await refreshProfile();
   return r;
 }

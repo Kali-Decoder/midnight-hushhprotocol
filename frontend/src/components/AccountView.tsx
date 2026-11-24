@@ -27,6 +27,8 @@ import {
 } from "@/hooks/useNightBalance";
 import {TransactionHistory} from "@/components/TransactionHistory";
 import {ConnectTwitterCard} from "@/components/ConnectTwitterCard";
+import {ConnectEmailCard} from "@/components/ConnectEmailCard";
+import {MidnightPassportCard} from "@/components/MidnightPassportCard";
 import {useState} from "react";
 import {getAvatarByAddress} from "@/utils/getAvatarByAddress";
 import {shortAddr} from "@/lib/address";
@@ -265,6 +267,7 @@ export function AccountView() {
   const {address, isConnected} = useAccount();
   const {
     user,
+    remembered,
     isSignedIn,
     hasProfile,
     needsUsername,
@@ -426,6 +429,12 @@ export function AccountView() {
         </div>
 
         <div className="space-y-6 px-5 py-5 sm:px-6 sm:py-6">
+          <MidnightPassportCard
+            user={user}
+            method={remembered?.method}
+            unlocked={isSignedIn}
+          />
+
           {showPendingDot && !isSignedIn ? (
             <PendingBanner
               title="Pending: passport locked"
@@ -447,6 +456,7 @@ export function AccountView() {
                 Social
               </h2>
               <ConnectTwitterCard />
+              <ConnectEmailCard />
             </section>
 
             <section className="mt-6 space-y-2.5">

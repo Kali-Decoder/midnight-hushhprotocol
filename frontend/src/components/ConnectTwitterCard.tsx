@@ -181,7 +181,7 @@ function WithPrivy({className}: {className: string}) {
         ready: p.ready,
         authenticated: p.authenticated,
         handle: twitterHandleFromPrivyUser(p.user),
-        login: p.login,
+        login: () => p.login({loginMethods: ["twitter"]}),
         logout: p.logout,
         getAccessToken: p.getAccessToken,
         devMode: false,

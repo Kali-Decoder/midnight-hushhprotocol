@@ -3,7 +3,7 @@
 
 import {normalizeName, type NameRecord, type PassportKeys} from "@hushh/sdk";
 
-import {linkTwitter, registerName} from "@/lib/api";
+import {linkEmailAddress, linkTwitter, registerName} from "@/lib/api";
 import {
   createPasskey,
   passkeySecret,
@@ -99,6 +99,12 @@ export async function signInPassport(name?: string): Promise<{keys: PassportKeys
 }
 
 /** Link the X account behind a Privy session (or a dev-mode handle) on-chain. */
+export async function linkEmail(params: {privyAccessToken?: string; email?: string}) {
+  const {keys, profile} = getState();
+  if (!keys || !profile) throw new Error("Sign in to your passport first.");
+  return linkEmailAddress({name: profile.name, keys, ...params});
+}
+
 export async function linkX(params: {privyAccessToken?: string; handle?: string}) {
   const {keys, profile} = getState();
   if (!keys || !profile) throw new Error("Sign in to your passport first.");

@@ -4,14 +4,15 @@
 //   3. alice tips @bob_x  -> resolves to bob.night -> deposit to the vault
 //   4. bob finds the tip by scanning the on-chain inbox, claims it once,
 //      and a second claim is rejected
+//   2b. bob links an email too (only its hash goes on-chain); both resolve
 //   5. a claim-link tip is found and claimed from the link secret alone
 // Usage: npm run deploy && npm run test:e2e
 import * as Rx from 'rxjs';
 
 import { deriveKeys } from '../sdk/keys.js';
 import { socialId } from '../sdk/names.js';
-import { signAttestation } from '../sdk/attestation.js';
-import { RegistryClient, VaultClient } from '../sdk/client.js';
+import { signAttestation, signEmailAttestation } from '../sdk/attestation.js';
+import { RegistryClient, VaultClient, recordHasEmail } from '../sdk/client.js';
 import { holder, type NoteSecret } from '../sdk/witnesses.js';
 import { randomBytes32 } from '../sdk/hex.js';
 import { attesterSecret, compiledRegistry, compiledVault, readDeployment } from './contracts.js';
@@ -66,6 +67,14 @@ await step(`link @${bobX} -> ${bobName}.night (Jubjub attestation)`, () => regis
 
 const to = await registry.resolveSocial(socialId('x', bobX));
 check(to?.name === bobName, '@handle resolves to bob.night');
+
+const bobEmail = `bob.${run}@example.com`;
+const emailAtt = signEmailAttestation(attesterSecret(), bobEmail, bobName);
+await step(`link ${bobEmail} -> ${bobName}.night (email attestation)`, () => registry.linkEmail(bob, emailAtt));
+const byEmail = await registry.resolveEmail(bobEmail.toUpperCase());
+check(byEmail?.name === bobName, 'email resolves to bob.night');
+check(byEmail?.social === socialId('x', bobX), 'X link survives the email link');
+check(recordHasEmail(byEmail!, bobEmail), 'record carries the email hash');
 
 const AMOUNT = 2_500_000n; // 2.5 NIGHT
 const sent = await step(`alice tips @${bobX} 2.5 NIGHT`, () => vault.sendTip(AMOUNT, { tipPk: to!.tipPk, boxPk: to!.boxPk }));

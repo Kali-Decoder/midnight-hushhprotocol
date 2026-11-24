@@ -384,7 +384,7 @@ function RegisterFlowWithPrivy() {
       x={{
         ready,
         handle: twitterHandleFromPrivyUser(user),
-        login,
+        login: () => login({loginMethods: ["twitter"]}),
         getAccessToken,
         devMode: false,
       }}

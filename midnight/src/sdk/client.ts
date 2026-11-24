@@ -9,8 +9,8 @@ import * as Vault from './contracts/vault.js';
 import * as Registry from './contracts/registry.js';
 import { newTip, sealTip, scanInbox, type OwnedTip } from './notes.js';
 import { linkKeys, newLinkSecret, type PassportKeys } from './keys.js';
-import { attestationSig, type Attestation } from './attestation.js';
-import { bytesToName, bytesToSocial, nameToBytes, normalizeName, socialToBytes } from './names.js';
+import { attestationSig, type Attestation, type EmailAttestation } from './attestation.js';
+import { bytesToName, bytesToSocial, emailHash, nameToBytes, normalizeName, socialToBytes } from './names.js';
 import { withSecret, type Holder, type NoteSecret } from './witnesses.js';
 import { bytesToHex } from './hex.js';
 
@@ -120,8 +120,12 @@ export interface NameRecord {
   tipPk: bigint;
   boxPk: Uint8Array;
   social: string | null;
+  /** SHA-256 email key when an email is linked (the address itself is not on-chain). */
+  emailHash: Uint8Array | null;
   index: bigint;
 }
+
+const isZero = (b: Uint8Array) => b.every((x) => x === 0);
 
 function toRecord(name: Uint8Array, r: any): NameRecord {
   return {
@@ -130,6 +134,7 @@ function toRecord(name: Uint8Array, r: any): NameRecord {
     tipPk: r.tip_pk,
     boxPk: r.enc_pk,
     social: bytesToSocial(r.social),
+    emailHash: isZero(r.email) ? null : r.email,
     index: r.index,
   };
 }
@@ -180,6 +185,22 @@ export class RegistryClient {
     );
   }
 
+  linkEmail(keys: PassportKeys, a: EmailAttestation): Promise<TxResult> {
+    return withSecret(this.secret, keys.nameSecret, async () =>
+      txResult(await this.handle.callTx.link_email(nameToBytes(a.name), emailHash(a.email), attestationSig(a))),
+    );
+  }
+
+  unlinkEmail(name: string, keys: PassportKeys): Promise<TxResult> {
+    return withSecret(this.secret, keys.nameSecret, async () =>
+      txResult(await this.handle.callTx.unlink_email(nameToBytes(name))),
+    );
+  }
+
+  async resolveEmail(email: string): Promise<NameRecord | null> {
+    return lookupEmail(await this.ledger(), email);
+  }
+
   async resolveName(name: string): Promise<NameRecord | null> {
     return lookupName(await this.ledger(), name);
   }
@@ -204,6 +225,20 @@ export function lookupSocial(l: Registry.Ledger, id: string): NameRecord | null 
   if (!l.socials.member(key)) return null;
   const name = l.socials.lookup(key);
   return l.names.member(name) ? toRecord(name, l.names.lookup(name)) : null;
+}
+
+export function lookupEmail(l: Registry.Ledger, email: string): NameRecord | null {
+  const key = emailHash(email);
+  if (!l.emails.member(key)) return null;
+  const name = l.emails.lookup(key);
+  return l.names.member(name) ? toRecord(name, l.names.lookup(name)) : null;
+}
+
+/** True when `email` is the one linked to this record. */
+export function recordHasEmail(r: Pick<NameRecord, 'emailHash'>, email: string): boolean {
+  if (!r.emailHash) return false;
+  const h = emailHash(email);
+  return r.emailHash.length === h.length && r.emailHash.every((b, i) => b === h[i]);
 }
 
 export function nameForOwner(l: Registry.Ledger, owner: bigint): NameRecord | null {

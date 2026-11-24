@@ -1,5 +1,7 @@
 // Encoding for .night names and social ids as the registry's Bytes<32> keys.
 
+import { sha256 } from '@noble/hashes/sha2.js';
+
 const MAX = 32;
 
 /** "Alice.night" / "@alice" / " alice " -> "alice". Throws on invalid names. */
@@ -35,6 +37,25 @@ export function socialToBytes(id: string): Uint8Array {
 export function bytesToSocial(bytes: Uint8Array): string | null {
   const s = decodeFixed(bytes);
   return s.length ? s : null;
+}
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/** " Ada@Example.com " -> "ada@example.com". Throws on obviously invalid input. */
+export function normalizeEmail(raw: string): string {
+  const e = raw.trim().toLowerCase();
+  if (!EMAIL_RE.test(e) || e.length > 254) throw new Error('invalid email address');
+  return e;
+}
+
+/**
+ * On-chain key for an email link: SHA-256("hushh:email:v1:" + email).
+ * Hides the address from casual readers of the chain; it cannot stop someone
+ * who already knows (or guesses) an email from checking it, since senders
+ * must be able to compute the same key from the address alone.
+ */
+export function emailHash(email: string): Uint8Array {
+  return sha256(new TextEncoder().encode(`hushh:email:v1:${normalizeEmail(email)}`));
 }
 
 function fixed(s: string): Uint8Array {

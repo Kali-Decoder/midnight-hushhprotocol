@@ -18,7 +18,7 @@ import {
 } from '@midnight-ntwrk/compact-runtime';
 
 import * as Registry from './contracts/registry.js';
-import { nameToBytes, normalizeName, socialToBytes } from './names.js';
+import { emailHash, nameToBytes, normalizeEmail, normalizeName, socialToBytes } from './names.js';
 
 const MSG_TYPE = new CompactTypeVector(1, CompactTypeField);
 
@@ -33,7 +33,7 @@ export function attestationMessage(social: string, name: string): bigint {
 }
 
 /** Circuit-shaped signature argument for link_social. */
-export function attestationSig(a: Attestation) {
+export function attestationSig(a: Pick<Attestation, 'sig'>) {
   return {
     announcement: { x: BigInt(a.sig.announcement.x), y: BigInt(a.sig.announcement.y) } as JubjubPoint,
     response: BigInt(a.sig.response),
@@ -55,6 +55,37 @@ export function signAttestation(attesterSecret: bigint, social: string, name: st
 
 export function verifyAttestation(attesterPk: JubjubPoint, a: Attestation): boolean {
   return jubjubSchnorrVerify(MSG_TYPE, [attestationMessage(a.social, a.name)], attesterPk, attestationSig(a));
+}
+
+// ── Email links ──────────────────────────────────────────────────────────────
+
+export interface EmailAttestation {
+  /** Normalised email. Only its hash goes on-chain. */
+  email: string;
+  name: string;
+  sig: Attestation['sig'];
+}
+
+export function emailAttestationMessage(email: string, name: string): bigint {
+  return Registry.pureCircuits.email_attestation_message(emailHash(email), nameToBytes(name));
+}
+
+export function signEmailAttestation(attesterSecret: bigint, email: string, name: string): EmailAttestation {
+  const e = normalizeEmail(email);
+  const n = normalizeName(name);
+  const sig = jubjubSchnorrSign(MSG_TYPE, [emailAttestationMessage(e, n)], attesterSecret);
+  return {
+    email: e,
+    name: n,
+    sig: {
+      announcement: { x: sig.announcement.x.toString(), y: sig.announcement.y.toString() },
+      response: sig.response.toString(),
+    },
+  };
+}
+
+export function verifyEmailAttestation(attesterPk: JubjubPoint, a: EmailAttestation): boolean {
+  return jubjubSchnorrVerify(MSG_TYPE, [emailAttestationMessage(a.email, a.name)], attesterPk, attestationSig(a));
 }
 
 /** Attester public key (registry constructor argument). */

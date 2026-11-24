@@ -264,8 +264,8 @@ export function SendForm({initialRecipient}: {initialRecipient?: string}) {
     setStep("resolving");
     try {
       const target = normalizeRecipient(recipient, recipientKind);
-      const found = recipientKind === "email" ? null : await resolveUser(target);
-      // Not on Hushh yet (or an email): pay with a claim link instead.
+      // Emails resolve through their on-chain hash; unlinked ones get a claim link.
+      const found = await resolveUser(target);
       const user: PublicUser = found ?? {
         id: target,
         wallet: target,
@@ -273,10 +273,13 @@ export function SendForm({initialRecipient}: {initialRecipient?: string}) {
         bulletPublicKey: "",
         twitterUsername: null,
       };
+      if (found && recipientKind === "email") {
+        toast.success(`${target} is linked to ${found.username}.night. The tip goes to their passport.`);
+      }
       if (!found) {
         toast.info(
           recipientKind === "email"
-            ? "Email recipients get a claim link."
+            ? "This email is not linked to a .night passport. They will get a claim link."
             : `@${user.username} has no .night passport yet. They will get a claim link.`
         );
       }

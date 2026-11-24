@@ -12,6 +12,7 @@ import {
   holder,
   lookupName,
   lookupSocial,
+  lookupEmail,
   RegistryContract,
   VaultContract,
   type NameRecord,
@@ -273,6 +274,16 @@ export async function resolveName(name: string): Promise<NameRecord | null> {
   if (!l) return null;
   try {
     return lookupName(l, name);
+  } catch {
+    return null;
+  }
+}
+
+export async function resolveEmailAddress(email: string): Promise<NameRecord | null> {
+  const l = await readRegistry();
+  if (!l) return null;
+  try {
+    return lookupEmail(l, email);
   } catch {
     return null;
   }

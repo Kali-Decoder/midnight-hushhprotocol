@@ -1,10 +1,12 @@
-// Social attester: signs "x:<handle> belongs to <name>.night" so the
+// Social attester: signs "x:<handle> belongs to <name>.night" (kind "x", the
+// default) or "<email> belongs to <name>.night" (kind "email") so the
 // night_registry contract will accept the link (it verifies this Jubjub
 // Schnorr signature in-circuit against its sealed attester key).
 //
-// The handle always comes from Privy's record of the user's linked X account,
-// never from the request body. Exception: ATTESTER_DEV_MODE=1 (localnet demos
-// without a Privy app) trusts the typed handle and must never run in production.
+// The handle / email always comes from Privy's record of the user's linked X
+// account or OTP-verified email, never from the request body. Exception:
+// ATTESTER_DEV_MODE=1 (localnet demos without a Privy app) trusts the typed
+// value and must never run in production.
 //
 // Env: ATTESTER_SECRET (Jubjub scalar, decimal), PRIVY_APP_ID / NEXT_PUBLIC_PRIVY_APP_ID,
 //      PRIVY_APP_SECRET, ATTESTER_DEV_MODE.
@@ -12,7 +14,7 @@
 import {readFileSync} from "node:fs";
 import path from "node:path";
 import {NextResponse} from "next/server";
-import {signAttestation} from "@hushh/sdk/attestation";
+import {signAttestation, signEmailAttestation} from "@hushh/sdk/attestation";
 import {normalizeName, socialId} from "@hushh/sdk/names";
 
 export const runtime = "nodejs";
@@ -28,7 +30,9 @@ function attesterSecret(): bigint {
   throw new Error("ATTESTER_SECRET is not set");
 }
 
-async function handleFromPrivy(accessToken: string): Promise<string> {
+type LinkedAccount = {type: string; username?: string | null; address?: string | null};
+
+async function privyAccounts(accessToken: string): Promise<LinkedAccount[]> {
   const appId = process.env.PRIVY_APP_ID || process.env.NEXT_PUBLIC_PRIVY_APP_ID;
   const appSecret = process.env.PRIVY_APP_SECRET;
   if (!appId || !appSecret) throw new Error("Privy is not configured on the server (PRIVY_APP_SECRET).");
@@ -36,18 +40,48 @@ async function handleFromPrivy(accessToken: string): Promise<string> {
   const privy = new PrivyClient({appId, appSecret});
   const claims = await privy.utils().auth().verifyAccessToken(accessToken);
   const user = await privy.users()._get(claims.user_id);
-  const x = (user.linked_accounts as Array<{type: string; username?: string | null}>).find(
-    (a) => a.type === "twitter_oauth",
-  );
+  return user.linked_accounts as LinkedAccount[];
+}
+
+async function handleFromPrivy(accessToken: string): Promise<string> {
+  const x = (await privyAccounts(accessToken)).find((a) => a.type === "twitter_oauth");
   if (!x?.username) throw new Error("No X account is linked to this Privy session.");
   return x.username;
 }
 
+/** The OTP-verified email on this Privy session (Privy only links verified emails). */
+async function emailFromPrivy(accessToken: string): Promise<string> {
+  const e = (await privyAccounts(accessToken)).find((a) => a.type === "email");
+  if (!e?.address) throw new Error("No verified email is linked to this Privy session.");
+  return e.address;
+}
+
 export async function POST(req: Request) {
   try {
-    const body = (await req.json()) as {name?: string; privyAccessToken?: string; handle?: string};
+    const body = (await req.json()) as {
+      name?: string;
+      kind?: "x" | "email";
+      privyAccessToken?: string;
+      handle?: string;
+      email?: string;
+    };
     if (!body.name) return NextResponse.json({error: "name is required"}, {status: 400});
     const name = normalizeName(body.name);
+
+    if (body.kind === "email") {
+      let email: string;
+      if (body.privyAccessToken) {
+        email = await emailFromPrivy(body.privyAccessToken);
+      } else if (process.env.ATTESTER_DEV_MODE === "1" && body.email) {
+        email = body.email;
+      } else {
+        return NextResponse.json(
+          {error: "Verify your email first (or run the attester with ATTESTER_DEV_MODE=1 on localnet)."},
+          {status: 401},
+        );
+      }
+      return NextResponse.json(signEmailAttestation(attesterSecret(), email, name));
+    }
 
     let handle: string;
     if (body.privyAccessToken) {
