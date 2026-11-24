@@ -50,6 +50,9 @@ importers:
       '@midnightntwrk/wallet-sdk-address-format':
         specifier: 4.0.1
         version: 4.0.1
+      '@midnightntwrk/wallet-sdk-capabilities':
+        specifier: 4.0.1
+        version: 4.0.1(@effect/platform@0.97.2(effect@3.22.5))(bufferutil@4.1.0)(crossws@0.3.5)(utf-8-validate@5.0.10)(ws@8.21.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))
       '@midnightntwrk/wallet-sdk-dust-wallet':
         specifier: 5.1.0
         version: 5.1.0(@effect/platform@0.97.2(effect@3.22.5))(bufferutil@4.1.0)(crossws@0.3.5)(utf-8-validate@5.0.10)(ws@8.21.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))

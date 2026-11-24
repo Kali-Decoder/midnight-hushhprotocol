@@ -14,6 +14,20 @@ import {toast} from "@/lib/toast";
 
 type Step = "idle" | "registry" | "vault" | "done";
 
+/** Full message chain (error -> cause -> cause…), so wallet rejections are readable. */
+function errorChain(e: unknown): string {
+  const parts: string[] = [];
+  let cur: unknown = e;
+  for (let i = 0; cur && i < 6; i++) {
+    const err = cur as {name?: string; message?: string; code?: unknown; reason?: unknown; cause?: unknown};
+    const code = err.code !== undefined ? ` [code ${String(err.code)}]` : "";
+    const reason = typeof err.reason === "string" ? ` (${err.reason})` : "";
+    parts.push(`${err.name ?? "Error"}${code}: ${err.message ?? String(cur)}${reason}`);
+    cur = err.cause;
+  }
+  return parts.join("\n  caused by ");
+}
+
 export function DeployPanel() {
   const {address, isConnected} = useAccount();
   const [attester, setAttester] = useState<{x: string; y: string} | null>(null);
@@ -40,8 +54,9 @@ export function DeployPanel() {
       setStep("done");
       toast.success("Contracts deployed.");
     } catch (e) {
+      console.error("[hushh] deploy failed", e);
       setStep("idle");
-      setError(formatError(e));
+      setError(errorChain(e));
     }
   }
 
@@ -128,7 +143,14 @@ export function DeployPanel() {
         </div>
       ) : null}
 
-      {error ? <ErrorBanner message={error} /> : null}
+      {error ? (
+        <div className="space-y-2">
+          <ErrorBanner message={formatError(error)} />
+          <pre className="max-h-64 overflow-auto whitespace-pre-wrap rounded-xl border border-fog bg-paper/60 p-3 font-mono text-[11px] text-ink">
+            {error}
+          </pre>
+        </div>
+      ) : null}
     </Panel>
   );
 }

@@ -134,6 +134,38 @@ async function connectorNetwork(api: {getConfiguration(): Promise<any>}) {
   return {networkId, indexer: {queryURL, subscriptionURL}};
 }
 
+/** ws(s) relay URL of the configured node, keeping its query (Blockfrost project_id). */
+function nodeRelayUrl(): URL | null {
+  const raw = validUrl(LOCAL_ENDPOINTS.node, ["http:", "https:", "ws:", "wss:"]);
+  if (!raw || (NETWORK_ID === "undeployed" && !process.env.NEXT_PUBLIC_MIDNIGHT_NODE_URL)) return null;
+  const u = new URL(raw);
+  u.protocol = u.protocol === "https:" || u.protocol === "wss:" ? "wss:" : "ws:";
+  return u;
+}
+
+/** A MidnightProvider that submits finalized transactions to the node directly. */
+async function nodeSubmitProvider() {
+  const relayURL = nodeRelayUrl();
+  if (!relayURL) return null;
+  const [{createLedger9MidnightProvider}, {makeDefaultSubmissionService}, {Transaction}] = await Promise.all([
+    import("@midnightntwrk/midnight-js-types"),
+    import("@midnightntwrk/wallet-sdk-capabilities/submission"),
+    import("@midnightntwrk/ledger-v9"),
+  ]);
+  return createLedger9MidnightProvider(async (handle: any) => {
+    const tx = handle.deserialize({v9: Transaction});
+    const [txId] = tx.identifiers();
+    if (!txId) throw new Error("Refusing to submit a transaction without an identifier.");
+    const submission = makeDefaultSubmissionService({relayURL});
+    try {
+      await submission.submitTransaction(tx, "InBlock");
+    } finally {
+      await submission.close().catch(() => undefined);
+    }
+    return txId;
+  });
+}
+
 async function connectConnector(): Promise<WalletSession> {
   const [w] = detectWallets();
   if (!w) {
@@ -146,7 +178,12 @@ async function connectConnector(): Promise<WalletSession> {
   ]);
   const network = await connectorNetwork(api);
   const {unshieldedAddress} = await api.getUnshieldedAddress();
-  const {walletProvider, midnightProvider} = await dappConnectorWalletProviders(api);
+  const {walletProvider, midnightProvider: walletSubmit} = await dappConnectorWalletProviders(api);
+  // The wallet proves, balances and signs. Submission goes straight to the
+  // configured node when there is one: 1AM can be left without a node
+  // endpoint, and then its own submitTransaction fails with
+  // "WebSocket connection failed".
+  const midnightProvider = (await nodeSubmitProvider()) ?? walletSubmit;
   const publicDataProvider = indexerPublicDataProvider(network.indexer);
   const privateStateProvider = memoryPrivateState();
   const cache = new Map<ContractName, Promise<MidnightProviders>>();
