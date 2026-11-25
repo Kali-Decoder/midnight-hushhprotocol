@@ -1,6 +1,7 @@
 "use client";
 
 import {useEffect, useState} from "react";
+import {AnimatePresence, motion} from "motion/react";
 import {
   AlertCircleIcon,
   CheckIcon,
@@ -84,17 +85,21 @@ export function ToastHost() {
     };
   }, []);
 
-  if (items.length === 0) return null;
-
   return (
     <div
       className="pointer-events-none fixed inset-x-0 bottom-6 z-[100] flex flex-col items-center gap-2 px-4"
       aria-live="polite"
     >
+      <AnimatePresence initial={false}>
       {items.map((t) => (
-        <div
+        <motion.div
           key={t.id}
-          className={`toast-enter pointer-events-auto flex w-full max-w-md items-start gap-2.5 rounded-2xl border bg-white/95 px-4 py-3 text-sm shadow-lg shadow-ink/10 backdrop-blur-md ${
+          layout
+          initial={{opacity: 0, y: 18, scale: 0.96}}
+          animate={{opacity: 1, y: 0, scale: 1}}
+          exit={{opacity: 0, y: 10, scale: 0.96, transition: {duration: 0.18, ease: [0.4, 0, 1, 1]}}}
+          transition={{type: "spring", stiffness: 380, damping: 30, mass: 0.8}}
+          className={`pointer-events-auto flex w-full max-w-md items-start gap-2.5 rounded-2xl border bg-white/95 px-4 py-3 text-sm shadow-lg shadow-ink/10 backdrop-blur-md ${
             t.kind === "error" ? "border-red-200" : "border-fog"
           }`}
         >
@@ -151,8 +156,9 @@ export function ToastHost() {
           >
             Close
           </button>
-        </div>
+        </motion.div>
       ))}
+      </AnimatePresence>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import {useCallback, useEffect, useState} from "react";
+import {motion} from "motion/react";
 import {listNoteHistory} from "@/lib/api";
 import {explorerTx} from "@/lib/config";
 import {useSession} from "@/hooks/useSession";
@@ -10,6 +11,13 @@ import {ExternalLinkIcon, LoaderIcon} from "@/components/icons";
 import {FieldLabel} from "@/components/ui";
 
 const PAGE_SIZE = 5;
+
+/** Rows ease in one after another when a page of history loads. */
+const rowMotion = (i: number) => ({
+  initial: {opacity: 0, y: 8},
+  animate: {opacity: 1, y: 0},
+  transition: {delay: i * 0.05, duration: 0.4, ease: [0.16, 1, 0.3, 1] as const},
+});
 
 type Direction = "sent" | "received";
 
@@ -99,13 +107,21 @@ export function TransactionHistory() {
               role="tab"
               aria-selected={on}
               onClick={() => setDirection(tab.id)}
-              className={`flex-1 rounded-xl px-3 py-2 text-sm font-semibold transition-all duration-200 ${
+              className={`relative flex-1 rounded-xl px-3 py-2 text-sm font-semibold transition-colors duration-200 ${
                 on
-                  ? "bg-ink text-paper shadow-[0_1px_2px_rgba(10,10,10,0.18)]"
+                  ? "text-paper"
                   : "text-graphite hover:bg-white/80 hover:text-ink"
               }`}
             >
-              {tab.label}
+              {on ? (
+                <motion.span
+                  layoutId="history-tab-pill"
+                  aria-hidden
+                  className="absolute inset-0 rounded-xl bg-ink shadow-[0_1px_2px_rgba(10,10,10,0.18)]"
+                  transition={{type: "spring", stiffness: 420, damping: 34}}
+                />
+              ) : null}
+              <span className="relative">{tab.label}</span>
             </button>
           );
         })}
@@ -125,7 +141,60 @@ export function TransactionHistory() {
               : "No received notes yet."}
           </p>
         ) : (
-          <table className="w-full min-w-[36rem] border-collapse text-left text-sm">
+          <>
+          {/* Phones: stacked rows instead of a sideways-scrolling table. */}
+          <ul className="divide-y divide-fog sm:hidden">
+            {items.map((item, i) => {
+              const from =
+                item.fromUsername ||
+                (item.direction === "sent" ? me : undefined);
+              const to =
+                item.toUsername ||
+                (item.direction === "received" ? me : undefined);
+              const tx =
+                item.direction === "sent"
+                  ? item.depositTxHash
+                  : item.claimTxHash || item.depositTxHash;
+              return (
+                <motion.li key={item.id} {...rowMotion(i)} className="space-y-2 px-4 py-3.5">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="font-bold tabular-nums text-ink">
+                      {item.amount != null
+                        ? `${item.amount} ${item.tokenSymbol ?? "NIGHT"}`
+                        : "—"}
+                    </span>
+                    <span
+                      className={`inline-flex shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
+                        item.claimed
+                          ? "bg-signal/10 text-signal"
+                          : "bg-amber/15 text-ink"
+                      }`}
+                    >
+                      {item.claimed ? "Claimed" : "Open"}
+                    </span>
+                  </div>
+                  <p className="flex min-w-0 items-center gap-2 text-sm font-semibold tracking-tight text-ink">
+                    <span className="min-w-0 truncate">{atName(from)}</span>
+                    <span className="shrink-0 text-graphite">→</span>
+                    <span className="min-w-0 truncate">{atName(to)}</span>
+                  </p>
+                  {tx ? (
+                    <a
+                      href={explorerTx(tx)}
+                      target="_blank"
+                      rel="noreferrer"
+                      title={tx}
+                      className="inline-flex items-center gap-1.5 font-mono text-xs text-graphite underline-offset-2 hover:underline"
+                    >
+                      {shortTx(tx)}
+                      <ExternalLinkIcon className="h-3 w-3 shrink-0" />
+                    </a>
+                  ) : null}
+                </motion.li>
+              );
+            })}
+          </ul>
+          <table className="hidden w-full min-w-[36rem] border-collapse text-left text-sm sm:table">
             <thead>
               <tr className="border-b border-fog bg-paper/60 text-[10px] font-semibold uppercase tracking-[0.14em] text-graphite">
                 <th className="px-4 py-3 font-semibold">From</th>
@@ -136,7 +205,7 @@ export function TransactionHistory() {
               </tr>
             </thead>
             <tbody className="divide-y divide-fog">
-              {items.map((item) => {
+              {items.map((item, i) => {
                 const from =
                   item.fromUsername ||
                   (item.direction === "sent" ? me : undefined);
@@ -149,7 +218,7 @@ export function TransactionHistory() {
                     : item.claimTxHash || item.depositTxHash;
 
                 return (
-                  <tr key={item.id} className="align-middle hover:bg-paper/40">
+                  <motion.tr key={item.id} {...rowMotion(i)} className="align-middle hover:bg-paper/40">
                     <td className="px-4 py-3.5 font-semibold tracking-tight text-ink">
                       {atName(from)}
                     </td>
@@ -188,11 +257,12 @@ export function TransactionHistory() {
                         <span className="font-mono text-xs text-graphite">—</span>
                       )}
                     </td>
-                  </tr>
+                  </motion.tr>
                 );
               })}
             </tbody>
           </table>
+          </>
         )}
       </div>
 

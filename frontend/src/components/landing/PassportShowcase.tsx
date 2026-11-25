@@ -66,7 +66,7 @@ export default function PassportShowcase() {
 
   return (
     <section ref={ref} id="passport" className="landing-band w-full max-w-6xl scroll-mt-28">
-      <div className="grid items-center gap-12 text-left lg:grid-cols-[1fr_1.1fr] lg:gap-16">
+      <div className="grid items-center gap-12 text-left *:min-w-0 lg:grid-cols-[1fr_1.1fr] lg:gap-16">
         <Reveal>
           <p className="font-mono text-xs uppercase tracking-[0.2em] text-graphite">Midnight Passport</p>
           <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-5xl">

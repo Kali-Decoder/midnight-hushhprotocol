@@ -2,6 +2,7 @@
 
 import type {ReactNode} from "react";
 import Link from "next/link";
+import {MotionConfig} from "motion/react";
 import {usePathname} from "next/navigation";
 import {ClickSoundProvider} from "@/components/ClickSoundProvider";
 import IslandNav from "@/components/IslandNav";
@@ -24,6 +25,9 @@ export function AppChrome({children}: {children: ReactNode}) {
         : "mx-auto w-full max-w-5xl flex-1 px-4 pb-16 pt-24 sm:pt-32";
 
   return (
+    // reducedMotion="user": Motion skips transform/layout animation when the
+    // OS asks for reduced motion, matching the CSS motion-reduce: classes.
+    <MotionConfig reducedMotion="user">
     <div className="flex min-h-dvh flex-col">
       <ClickSoundProvider />
       <IslandNav />
@@ -55,7 +59,7 @@ export function AppChrome({children}: {children: ReactNode}) {
               send silently. · on Midnight
             </p>
           </div>
-          <nav className="flex items-center gap-6 text-sm tracking-[-0.01em] text-graphite">
+          <nav className="flex flex-wrap items-center justify-center gap-x-5 gap-y-3 text-sm tracking-[-0.01em] text-graphite sm:justify-end sm:gap-x-6">
             <a
               href="/whitepaper.html"
               target="_blank"
@@ -101,5 +105,6 @@ export function AppChrome({children}: {children: ReactNode}) {
         </div>
       </footer>
     </div>
+    </MotionConfig>
   );
 }

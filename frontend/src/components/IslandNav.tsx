@@ -2,12 +2,26 @@
 
 import Link from "next/link";
 import {usePathname} from "next/navigation";
+import {motion} from "motion/react";
 import {useAccount} from "@/lib/midnight/hooks";
 import {APP_NAV_WIDTH} from "@/components/AppShell";
 import {ConnectButton} from "@/components/ConnectButton";
 import {UserAvatar} from "@/components/UserAvatar";
 import {useSession} from "@/hooks/useSession";
 import {profilePath} from "@/lib/routes";
+
+/** The white "you are here" pill. One shared element (layoutId) that slides
+ *  between tabs on navigation instead of jumping. */
+function NavPill() {
+  return (
+    <motion.span
+      layoutId="island-nav-pill"
+      aria-hidden
+      className="absolute inset-0 rounded-full bg-paper shadow-[0_1px_0_rgba(255,255,255,0.5)_inset]"
+      transition={{type: "spring", stiffness: 420, damping: 34, mass: 0.8}}
+    />
+  );
+}
 
 function navActive(pathname: string, href: string) {
   if (href === "/") return pathname === "/";
@@ -44,11 +58,12 @@ export default function IslandNav() {
           opts?.showOnMobile === false ? "hidden md:inline-flex" : "inline-flex"
         } ${
           active
-            ? "bg-paper text-ink shadow-[0_1px_0_rgba(255,255,255,0.5)_inset]"
+            ? "text-ink"
             : "text-paper/80 hover:bg-white/[0.08] hover:text-paper"
         }`}
       >
-        {label}
+        {active ? <NavPill /> : null}
+        <span className="relative">{label}</span>
       </Link>
     );
   }
@@ -95,15 +110,21 @@ export default function IslandNav() {
                 aria-current={profileActive ? "page" : undefined}
                 title={username ? `@${username}` : "Claim username"}
                 className={`relative inline-flex max-w-[8rem] shrink-0 items-center gap-1.5 rounded-full py-1 pl-1 pr-2 text-[13px] font-semibold tracking-[-0.01em] transition-all duration-200 sm:max-w-40 sm:gap-2 lg:max-w-56 sm:pr-3.5 sm:text-sm ${
+                  address ? "max-sm:pr-1" : ""
+                } ${
                   profileActive
-                    ? "bg-paper text-ink shadow-[0_1px_0_rgba(255,255,255,0.5)_inset]"
+                    ? "text-ink"
                     : "text-paper/80 hover:bg-white/[0.08] hover:text-paper"
                 }`}
               >
+                {profileActive ? <NavPill /> : null}
                 {address ? (
-                  <UserAvatar address={address} size="sm" />
+                  <span className="relative flex shrink-0">
+                    <UserAvatar address={address} size="sm" />
+                  </span>
                 ) : null}
-                <span className="truncate">
+                {/* Phones: avatar only, so the nav row fits a 360px screen. */}
+                <span className={`relative truncate ${address ? "max-sm:sr-only" : ""}`}>
                   {username ? `@${username}` : "Claim"}
                 </span>
               </Link>

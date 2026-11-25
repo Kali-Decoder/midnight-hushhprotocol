@@ -428,7 +428,7 @@ export function SendForm({initialRecipient}: {initialRecipient?: string}) {
                   </div>
 
                   <div className="rounded-2xl border border-fog bg-white px-5 py-5">
-                    <p className="flex items-center gap-2.5 text-5xl font-bold tracking-tight">
+                    <p className="flex min-w-0 items-center gap-2.5 text-4xl font-bold tracking-tight sm:text-5xl">
                       {recipientKind !== "email" ? (
                         <span
                           className={`text-3xl font-semibold ${
@@ -697,7 +697,7 @@ export function SendForm({initialRecipient}: {initialRecipient?: string}) {
                             value={amountText}
                             disabled={busy}
                             onChange={(e) => onAmountTextChange(e.target.value)}
-                            className="w-full min-w-0 bg-transparent text-center text-5xl font-bold tracking-tight tabular-nums text-ink outline-none transition-colors duration-200 placeholder:text-fog focus:text-ink disabled:opacity-50"
+                            className="w-full min-w-0 bg-transparent text-center text-4xl font-bold sm:text-5xl tracking-tight tabular-nums text-ink outline-none transition-colors duration-200 placeholder:text-fog focus:text-ink disabled:opacity-50"
                             aria-label={`Amount in ${selectedToken.symbol}`}
                           />
                           <span

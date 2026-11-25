@@ -1,7 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import {motion} from "motion/react";
 
+/**
+ * Scroll reveal: rises 32px, un-blurs and fades in once, the first time it
+ * scrolls into view. Same look as before, now spring-driven by Motion.
+ * Reduced motion: MotionConfig (AppChrome) drops the movement, so only a
+ * short fade remains.
+ */
 export default function Reveal({
   children,
   delay = 0,
@@ -11,36 +17,20 @@ export default function Reveal({
   delay?: number;
   className?: string;
 }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [shown, setShown] = useState(false);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const io = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setShown(true);
-          io.disconnect();
-        }
-      },
-      {threshold: 0.18, rootMargin: "0px 0px -8% 0px"},
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, []);
-
   return (
-    <div
-      ref={ref}
-      style={{transitionDelay: `${delay}ms`}}
-      className={`transition-all duration-[800ms] ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none ${
-        shown
-          ? "translate-y-0 opacity-100 blur-0"
-          : "translate-y-8 opacity-0 blur-[2px] motion-reduce:translate-y-0 motion-reduce:opacity-100 motion-reduce:blur-0"
-      } ${className}`}
+    <motion.div
+      className={className}
+      initial={{opacity: 0, y: 32, filter: "blur(2px)"}}
+      whileInView={{opacity: 1, y: 0, filter: "blur(0px)"}}
+      viewport={{once: true, amount: 0.18, margin: "0px 0px -8% 0px"}}
+      transition={{
+        delay: delay / 1000,
+        y: {type: "spring", stiffness: 140, damping: 22, mass: 0.9},
+        opacity: {duration: 0.6, ease: [0.16, 1, 0.3, 1]},
+        filter: {duration: 0.6, ease: [0.16, 1, 0.3, 1]},
+      }}
     >
       {children}
-    </div>
+    </motion.div>
   );
 }
