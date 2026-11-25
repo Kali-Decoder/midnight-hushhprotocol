@@ -41,7 +41,7 @@ export default function IslandNav() {
         href={href}
         aria-current={active ? "page" : undefined}
         className={`relative shrink-0 rounded-full px-2.5 py-1.5 text-[13px] font-semibold tracking-[-0.01em] transition-all duration-200 sm:px-3.5 sm:py-2 sm:text-sm ${
-          opts?.showOnMobile === false ? "hidden sm:inline-flex" : "inline-flex"
+          opts?.showOnMobile === false ? "hidden md:inline-flex" : "inline-flex"
         } ${
           active
             ? "bg-paper text-ink shadow-[0_1px_0_rgba(255,255,255,0.5)_inset]"
@@ -77,7 +77,9 @@ export default function IslandNav() {
           <img
             src="/wordmark.svg"
             alt="Hushh Protocol"
-            className="hidden h-4 w-auto brightness-0 invert sm:block"
+            className={`hidden h-4 w-auto brightness-0 invert ${
+              showAppNav ? "lg:block" : "sm:block"
+            }`}
           />
         </Link>
 
@@ -92,7 +94,7 @@ export default function IslandNav() {
                 href={profileHref}
                 aria-current={profileActive ? "page" : undefined}
                 title={username ? `@${username}` : "Claim username"}
-                className={`relative inline-flex max-w-[8rem] shrink-0 items-center gap-1.5 rounded-full py-1 pl-1 pr-2 text-[13px] font-semibold tracking-[-0.01em] transition-all duration-200 sm:max-w-none sm:gap-2 sm:pr-3.5 sm:text-sm ${
+                className={`relative inline-flex max-w-[8rem] shrink-0 items-center gap-1.5 rounded-full py-1 pl-1 pr-2 text-[13px] font-semibold tracking-[-0.01em] transition-all duration-200 sm:max-w-40 sm:gap-2 lg:max-w-56 sm:pr-3.5 sm:text-sm ${
                   profileActive
                     ? "bg-paper text-ink shadow-[0_1px_0_rgba(255,255,255,0.5)_inset]"
                     : "text-paper/80 hover:bg-white/[0.08] hover:text-paper"
