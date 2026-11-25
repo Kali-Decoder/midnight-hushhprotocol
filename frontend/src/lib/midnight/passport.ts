@@ -9,6 +9,7 @@ import {
   passkeySecret,
   passkeysSupported,
   passphraseSecret,
+  PrfUnsupportedError,
   type PasskeyRef,
 } from "./passkey";
 import {getState, remember, resolveName, unlock, type RememberedPassport} from "./store";
@@ -31,7 +32,7 @@ export function usePassphrase(): boolean {
 function askPassphrase(name: string, confirm: boolean): string {
   const p = window.prompt(
     confirm
-      ? `Choose a passphrase for ${name}.night (this device has no passkey support). You will need it to sign in.`
+      ? `Choose a passphrase for ${name}.night (at least 8 characters). You will need it to sign in.`
       : `Passphrase for ${name}.night`,
   );
   if (!p || p.length < 8) throw new Error("A passphrase of at least 8 characters is required.");
@@ -44,8 +45,20 @@ async function newSecret(name: string): Promise<{master: Uint8Array; rem: Rememb
     return {master, rem: {name, method: "passphrase"}};
   }
   const ref: PasskeyRef = await createPasskey(name);
-  const {secret} = await passkeySecret(ref);
-  return {master: secret, rem: {name, method: "passkey", passkey: ref}};
+  try {
+    const {secret} = await passkeySecret(ref);
+    return {master: secret, rem: {name, method: "passkey", passkey: ref}};
+  } catch (e) {
+    // Authenticator made a passkey but can't derive a key (no PRF), e.g. an
+    // older Windows Hello build. Offer the passphrase path instead of a dead end.
+    if (!(e instanceof PrfUnsupportedError)) throw e;
+    const ok = window.confirm(
+      `${e.message}\n\nUse a passphrase for ${name}.night instead? You'll need the same passphrase to sign in on other devices.`,
+    );
+    if (!ok) throw e;
+    const master = await passphraseSecret(name, askPassphrase(name, true));
+    return {master, rem: {name, method: "passphrase"}};
+  }
 }
 
 async function existingSecret(rem: RememberedPassport | null, name?: string) {

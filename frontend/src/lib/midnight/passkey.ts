@@ -11,6 +11,14 @@
 const PRF_SALT = new TextEncoder().encode("hushh:passport:prf:v1");
 const RP_NAME = "Hushh Protocol";
 
+/** The authenticator can't derive a secret (no WebAuthn PRF). Callers may fall back to a passphrase. */
+export class PrfUnsupportedError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "PrfUnsupportedError";
+  }
+}
+
 export interface PasskeyRef {
   credentialIdB64: string;
   label: string;
@@ -73,12 +81,10 @@ export async function createPasskey(label: string): Promise<PasskeyRef> {
     throw new Error(explain(e));
   }
   if (!cred) throw new Error("Passkey creation was cancelled.");
-  const ext = cred.getClientExtensionResults() as {prf?: {enabled?: boolean}};
-  if (!ext?.prf?.enabled) {
-    throw new Error(
-      "This authenticator does not support the WebAuthn PRF extension. Use a platform passkey (Touch ID, Windows Hello, recent Android) or use a passphrase instead.",
-    );
-  }
+  // Don't trust `prf.enabled` from create(): Chrome/Edge (<=146) with Windows
+  // Hello don't report it at creation even though get() returns PRF results.
+  // passkeySecret() right after is the real test and throws
+  // PrfUnsupportedError if the authenticator truly can't do PRF.
   return {credentialIdB64: b64encode(cred.rawId), label: stable};
 }
 
@@ -100,7 +106,11 @@ export async function passkeySecret(ref?: PasskeyRef): Promise<{secret: Uint8Arr
   if (!assertion) throw new Error("Passkey request was cancelled.");
   const result = (assertion.getClientExtensionResults() as {prf?: {results?: {first?: ArrayBuffer}}})?.prf?.results
     ?.first;
-  if (!result) throw new Error("This passkey did not return a PRF result. Use a passphrase instead.");
+  if (!result) {
+    throw new PrfUnsupportedError(
+      "This passkey can't derive your passport key (no WebAuthn PRF). On Windows, update Windows 11 and use the latest Chrome, Edge or Firefox, sign in with your phone's passkey, or use a passphrase.",
+    );
+  }
   const secret = new Uint8Array(result);
   if (secret.length !== 32) throw new Error(`Unexpected PRF output length ${secret.length}.`);
   return {secret, credentialIdB64: b64encode(assertion.rawId)};
