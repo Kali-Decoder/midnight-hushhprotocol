@@ -1,6 +1,8 @@
 /**
- * Turn raw wallet / API / contract errors into short UI copy.
- * Keep messages factual. No marketing tone.
+ * Turn raw wallet / API / contract errors into short, plain-language copy
+ * that someone who has never heard of ZK proofs or indexers can act on.
+ * Anything that still looks technical falls back to a generic message; the
+ * raw error always goes to the console for debugging.
  */
 
 const API_MESSAGES: Record<string, string> = {
@@ -10,7 +12,7 @@ const API_MESSAGES: Record<string, string> = {
   recipient_required: "Recipient username is required.",
   invalid_wallet: "That wallet address is not valid.",
   invalid_username:
-    "Username must match your Twitter handle (1-15 chars: letters, numbers, underscore).",
+    "Names can be 2–27 characters: letters, numbers, - or _.",
   invalid_bullet_public_key: "Encryption key is invalid. Try reconnecting.",
   invalid_signature: "Signature format is invalid.",
   bad_signature: "Signature check failed. Sign the message again.",
@@ -117,74 +119,113 @@ function isUserRejection(text: string): boolean {
   );
 }
 
+/**
+ * Everyday wording for the failures people actually hit. Checked before the
+ * contract hints, first match wins.
+ */
+const FRIENDLY: Array<{match: RegExp; message: string}> = [
+  // Wallet & passkey prompts
+  {
+    match: /user rejected|user denied|rejected the request|denied transaction|request rejected|NotAllowedError|not allowed by the user|operation either timed out or was not allowed/i,
+    message: "You cancelled the request. Nothing was sent. Try again whenever you're ready.",
+  },
+  {match: /passkey (request|creation) was cancelled/i, message: "You closed the passkey prompt. Tap the button to try again."},
+  {
+    match: /no midnight wallet found|wallet not found|window\.midnight|not installed/i,
+    message: "We couldn't find a Midnight wallet. Install the 1AM extension, then reload this page.",
+  },
+  {
+    match: /wallet is locked|locked wallet|not authori[sz]ed|unauthori[sz]ed by wallet|connection refused by wallet/i,
+    message: "Unlock your 1AM wallet and allow Hushh to connect, then try again.",
+  },
+  {
+    match: /network id|wrong network|network mismatch|EraMismatch|ledger version|version mismatch/i,
+    message: "Your wallet is on a different Midnight network. Switch 1AM to Preprod and try again.",
+  },
+  {match: /indexerUri|indexerWsUri|usable indexer/i, message: "Your wallet didn't share its network settings. Reconnect 1AM and try again."},
+  // Passport
+  {match: /no secret is loaded|witness .* requested|passport.*locked/i, message: "Your passport is locked. Sign in with your passkey and try again."},
+  {match: /names are 2-27 chars/i, message: "Names can be 2–27 characters: letters, numbers, - or _."},
+  {match: /attestation failed|attestation was rejected|bad attestation/i, message: "We couldn't verify your X or email account. Sign in to it again and retry."},
+  {match: /PRF output length|master secret must be/i, message: "This passkey can't be used for Hushh. Try another device or a passphrase."},
+  // Funds & fees
+  {
+    match: /insufficient|not enough (night|dust|funds)|NotEnoughDust|could not balance|BalanceCheck|exceeds allowance/i,
+    message: "Not enough tNIGHT, or not enough tDUST for the network fee. Top up your wallet and try again.",
+  },
+  {match: /amount out of u64|amount must be positive|invalid amount/i, message: "Enter an amount above zero."},
+  // Network / connectivity
+  {
+    match: /failed to fetch|networkerror|network request failed|ERR_NETWORK|ECONNREFUSED|ENOTFOUND|websocket|socket hang up|load failed/i,
+    message: "We couldn't reach the Midnight network. Check your internet connection and try again.",
+  },
+  {match: /timed? ?out|timeout|deadline exceeded/i, message: "This is taking longer than usual. Please try again in a moment."},
+  {match: /RootNotFound|root not found|unknown root|not caught up/i, message: "The network is still catching up. Wait a few seconds and try again."},
+  {match: /proof server|prov(ing|er) (failed|error)|failed to prove|InvalidProof|invalid proof/i, message: "We couldn't create the privacy proof. Keep your wallet open and try again."},
+  {match: /no contract state|contract not found|not deployed/i, message: "Hushh can't reach its contracts right now. Please try again shortly."},
+  {match: /without a transaction id|without an identifier|submission (failed|error)|SubmissionError/i, message: "Your wallet didn't confirm the transaction. Please try again."},
+  // Links & sharing
+  {match: /odd-length hex|invalid character|invalid claim link|malformed/i, message: "This link looks broken. Ask the sender for a new one."},
+  {match: /canvas_unavailable/i, message: "Your browser couldn't create the image. Try another browser."},
+];
+
+/** Signs that a message was written for developers, not people. */
+const TECHNICAL =
+  /\b[A-Z][A-Za-z]*(Error|Exception)\b|\b0x[0-9a-f]{6,}|[0-9a-f]{24,}|[{}[\]<>]|\bat [\w.$<>]+ ?\(|\w+\.(ts|js|tsx|rs):\d+|::|\bundefined\b|\bnull\b|\bNaN\b|is not a function|cannot read propert|unexpected token|stack|panic|wasm|NEXT_PUBLIC/i;
+
+const GENERIC = "Something went wrong on our side. Please try again.";
+
+function matchFriendly(text: string): string | null {
+  for (const r of FRIENDLY) if (r.match.test(text)) return r.message;
+  for (const hint of CONTRACT_HINTS) if (hint.match.test(text)) return hint.message;
+  return null;
+}
+
 /** Human-readable error for banners and toasts. */
-export function formatError(err: unknown, fallback = "Something went wrong."): string {
+export function formatError(err: unknown, fallback = "Something went wrong. Please try again."): string {
   const raw = rawString(err).trim();
   if (!raw) return fallback;
-
-  if (isUserRejection(raw)) {
-    return "Request cancelled in your wallet.";
-  }
 
   // Exact API snake_case codes
   const code = raw.replace(/^error:\s*/i, "").trim();
   if (API_MESSAGES[code]) return API_MESSAGES[code];
-
-  // http_404 style from our api helper
   const http = raw.match(/^http_(\d+)$/);
-  if (http && API_MESSAGES[`http_${http[1]}`]) {
-    return API_MESSAGES[`http_${http[1]}`];
-  }
+  if (http && API_MESSAGES[`http_${http[1]}`]) return API_MESSAGES[`http_${http[1]}`];
 
-  for (const hint of CONTRACT_HINTS) {
-    if (hint.match.test(raw)) return hint.message;
-  }
+  if (isUserRejection(raw)) return FRIENDLY[0].message;
 
-  // Already clean product copy we throw ourselves
-  if (
-    /witness not ready|cannot reach indexer|connect (a |your )?wallet|sign in|username must|bound to a different wallet/i.test(
-      raw
-    )
-  ) {
-    // Collapse whitespace / strip trailing punctuation noise
-    return raw.replace(/\s+/g, " ").trim();
-  }
+  const friendly = matchFriendly(raw);
+  if (friendly) return friendly;
 
-  // Strip viem / wagmi boilerplate wrappers
-  let cleaned = raw
-    .replace(/^ContractFunctionExecutionError:\s*/i, "")
-    .replace(/^TransactionExecutionError:\s*/i, "")
-    .replace(/^UserRejectedRequestError:\s*/i, "")
-    .replace(/\nDocs:.*$/is, "")
-    .replace(/\nVersion:.*$/is, "")
-    .replace(/\nDetails:.*$/is, "")
-    .replace(/\nContract Call:.*$/is, "")
+  // Strip wrapper boilerplate and keep the first line only.
+  const cleaned = raw
+    .replace(/^(\w+Error|Error):\s*/i, "")
+    .split("\n")[0]
     .replace(/\s+/g, " ")
     .trim();
 
-  if (isUserRejection(cleaned)) {
-    return "Request cancelled in your wallet.";
-  }
+  const again = matchFriendly(cleaned);
+  if (again) return again;
 
-  for (const hint of CONTRACT_HINTS) {
-    if (hint.match.test(cleaned)) return hint.message;
+  // Our own product copy reads like a sentence: keep it. Anything that looks
+  // like a stack trace, code or hex goes to the console instead.
+  if (cleaned && cleaned.length <= 220 && !TECHNICAL.test(cleaned)) {
+    return cleaned;
   }
-
-  // Truncate extremely long dumps
-  if (cleaned.length > 180) {
-    cleaned = cleaned.slice(0, 177).trimEnd() + "…";
-  }
-
-  return cleaned || fallback;
+  if (typeof console !== "undefined") console.error("[hushh] error shown as generic message:", err);
+  return GENERIC;
 }
 
+/** Short banner heading in plain words. */
 export function formatErrorTitle(err: unknown): string {
   const msg = formatError(err);
-  if (msg.startsWith("Request cancelled")) return "Cancelled";
-  if (/sign in|session expired|unauthorized/i.test(msg)) return "Sign in required";
-  if (/network|wrong network|switch/i.test(msg)) return "Network";
-  if (/witness|indexer|root/i.test(msg)) return "Not ready yet";
-  if (/insufficient|allowance|balance/i.test(msg)) return "Funds";
-  if (/taken|conflict|already/i.test(msg)) return "Conflict";
-  return "Error";
+  if (/cancelled|closed the passkey/i.test(msg)) return "Cancelled";
+  if (/sign in|passport is locked|session expired/i.test(msg)) return "Sign in needed";
+  if (/different midnight network|switch/i.test(msg)) return "Wrong network";
+  if (/install|unlock your 1am|reconnect/i.test(msg)) return "Wallet needed";
+  if (/catching up|longer than usual|internet|reach/i.test(msg)) return "Connection trouble";
+  if (/tnight|tdust|amount/i.test(msg)) return "Not enough funds";
+  if (/taken|already/i.test(msg)) return "Already in use";
+  if (/link looks broken/i.test(msg)) return "Broken link";
+  return "Something went wrong";
 }

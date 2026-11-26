@@ -6,6 +6,7 @@ import {MotionConfig} from "motion/react";
 import {usePathname} from "next/navigation";
 import {ClickSoundProvider} from "@/components/ClickSoundProvider";
 import IslandNav from "@/components/IslandNav";
+import {SetupDock} from "@/components/SetupDock";
 import {GithubIcon, XBrandIcon} from "@/components/icons";
 import {isAppShellPath} from "@/lib/routes";
 
@@ -32,6 +33,7 @@ export function AppChrome({children}: {children: ReactNode}) {
       <ClickSoundProvider />
       <IslandNav />
       <main className={mainPad}>{children}</main>
+      <SetupDock />
       <footer
         className={`mt-auto border-t border-fog/60 bg-transparent ${
           app ? "hidden sm:block" : ""

@@ -33,7 +33,7 @@ import {
   ZK_PATHS,
   contractsConfigured,
 } from "./config";
-import {connectWallet, type WalletSession} from "./wallet";
+import {connectWallet, waitForWallet, type WalletSession} from "./wallet";
 import {labelNextTx} from "./txProgress";
 import type {PasskeyRef} from "./passkey";
 
@@ -118,7 +118,8 @@ export function boot() {
   if (booted || typeof window === "undefined") return;
   booted = true;
   set({remembered: readRemembered(), ready: true});
-  if (localStorage.getItem(AUTOCONNECT_KEY)) void connect().catch(() => undefined);
+  // Stay connected across reloads: only Sign out / Disconnect clears this.
+  if (localStorage.getItem(AUTOCONNECT_KEY)) void reconnect();
   const saved = sessionStorage.getItem(SESSION_SECRET_KEY);
   if (saved) {
     const bytes = Uint8Array.from(saved.match(/../g) ?? [], (h) => parseInt(h, 16));
@@ -130,7 +131,7 @@ export function boot() {
 
 let connecting: Promise<WalletSession> | null = null;
 
-export async function connect(): Promise<WalletSession> {
+export async function connect(opts?: {keepOnError?: boolean}): Promise<WalletSession> {
   if (state.wallet) return state.wallet;
   if (connecting) return connecting;
   set({walletStatus: "connecting", walletError: null});
@@ -142,13 +143,38 @@ export async function connect(): Promise<WalletSession> {
     })
     .catch((e) => {
       set({walletStatus: "disconnected", walletError: String((e as Error)?.message ?? e)});
-      localStorage.removeItem(AUTOCONNECT_KEY);
+      // A failed silent reconnect (extension slow, wallet locked) must not
+      // sign the user out; a failed manual connect simply isn't remembered.
+      if (!opts?.keepOnError) localStorage.removeItem(AUTOCONNECT_KEY);
       throw e;
     })
     .finally(() => {
       connecting = null;
     });
   return connecting;
+}
+
+/**
+ * Silent reconnect after a reload. Waits for the extension to inject itself
+ * and retries briefly; a failure here never forgets the wallet, so the next
+ * reload tries again. Only an explicit disconnect() clears the flag.
+ */
+async function reconnect() {
+  set({walletStatus: "connecting", walletError: null});
+  const found = await waitForWallet();
+  if (!found || !localStorage.getItem(AUTOCONNECT_KEY)) {
+    if (!state.wallet) set({walletStatus: "disconnected"});
+    return;
+  }
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      await connect({keepOnError: true});
+      return;
+    } catch {
+      if (!localStorage.getItem(AUTOCONNECT_KEY)) return; // signed out meanwhile
+      await new Promise((r) => setTimeout(r, 1200 * (attempt + 1)));
+    }
+  }
 }
 
 export async function disconnect() {

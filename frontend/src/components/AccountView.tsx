@@ -327,15 +327,15 @@ export function AccountView() {
         <PendingBanner
           title={
             needsUsername
-              ? "Connect Twitter to claim your .night name"
+              ? "Claim your .night name"
               : "Unlock your passport with your passkey"
           }
           body={
             needsUsername
-              ? "Connect Twitter, then create a passkey. Your X handle becomes your .night name."
+              ? "Pick a .night name, then create a passkey. Linking X or email is optional."
               : "Wallet is connected. Unlock your passport to send, open your inbox, and see history."
           }
-          cta={needsUsername ? "Connect Twitter" : "Sign in now"}
+          cta={needsUsername ? "Claim a name" : "Sign in now"}
           href="/register"
         />
 

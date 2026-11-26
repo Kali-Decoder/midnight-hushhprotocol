@@ -33,10 +33,12 @@ function rpEntity(): PublicKeyCredentialRpEntity {
 function explain(error: unknown): string {
   const message = String((error as {message?: unknown})?.message ?? error);
   if (/invalid domain|relying party|rp id|security/i.test(message)) {
-    return "Passkeys need a valid domain. Open the app at http://localhost:3000 (not 127.0.0.1) and try again.";
+    return /^(\d{1,3}\.){3}\d{1,3}$/.test(window.location.hostname)
+      ? "Passkeys don't work on an IP address. Open the app at http://localhost:3000 instead."
+      : "Passkeys aren't available on this page. Open the app at hushh.accuracy.wtf and try again.";
   }
   if (/NotAllowedError|timed out|not allowed/i.test(message)) {
-    return "Passkey request was cancelled.";
+    return "You closed the passkey prompt. Tap the button to try again.";
   }
   return message;
 }
@@ -108,7 +110,7 @@ export async function passkeySecret(ref?: PasskeyRef): Promise<{secret: Uint8Arr
     ?.first;
   if (!result) {
     throw new PrfUnsupportedError(
-      "This passkey can't derive your passport key (no WebAuthn PRF). On Windows, update Windows 11 and use the latest Chrome, Edge or Firefox, sign in with your phone's passkey, or use a passphrase.",
+      "This device's passkey can't unlock a Hushh passport yet. On Windows, update Windows 11 and use the latest Chrome, Edge or Firefox. You can also use your phone's passkey, or a passphrase.",
     );
   }
   const secret = new Uint8Array(result);

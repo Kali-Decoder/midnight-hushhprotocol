@@ -6,7 +6,7 @@ import Reveal from "@/components/Reveal";
 const PILLARS = [
   {
     title: "Midnight Passport",
-    body: "Your X handle becomes your .night name, owned by a passkey. Link your email too. No seed phrase, no address to share.",
+    body: "Pick a .night name, owned by a passkey. Link your X and email so people can pay @you. No seed phrase, no address to share.",
     mark: "≡",
   },
   {

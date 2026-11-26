@@ -1,5 +1,6 @@
 "use client";
 
+import {formatError} from "@/lib/errors";
 import {useIsCorrectNetwork} from "@/lib/midnight/hooks";
 import {useDisconnect} from "@/lib/midnight/hooks";
 import {toast} from "@/lib/toast";
@@ -49,7 +50,7 @@ export function SwitchNetworkButton({
             : `Switch to ${targetName}`}
       </button>
       {error && !compact ? (
-        <p className="mt-2 text-center text-xs text-amber">{error.message}</p>
+        <p className="mt-2 text-center text-xs text-amber">{formatError(error)}</p>
       ) : null}
     </>
   );

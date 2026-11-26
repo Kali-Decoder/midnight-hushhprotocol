@@ -1,9 +1,13 @@
 "use client";
 
-import {useState} from "react";
+import {useEffect, useState} from "react";
+import {motion} from "motion/react";
 import {usePrivy} from "@privy-io/react-auth";
+import {normalizeName} from "@hushh/sdk";
 import {useAccount} from "@/lib/midnight/hooks";
 import {claimPassport, linkX, signInPassport} from "@/lib/midnight/passport";
+import {resolveName} from "@/lib/midnight/store";
+import {isReservedPath} from "@/lib/routes";
 import {walletsMatch} from "@/lib/session";
 import {
   TWITTER_USERNAME_RE,
@@ -14,6 +18,8 @@ import {celebrateUsernameClaim, celebrateXLinked} from "@/lib/celebrate";
 import {useSession} from "@/hooks/useSession";
 import {useSignOut} from "@/hooks/useSignOut";
 import {ConnectButton} from "@/components/ConnectButton";
+import {ConnectTwitterCard} from "@/components/ConnectTwitterCard";
+import {ConnectEmailCard} from "@/components/ConnectEmailCard";
 import {NetworkGate} from "@/components/NetworkGate";
 import {LoaderIcon, CheckIcon, XBrandIcon} from "@/components/icons";
 import {ErrorBanner, Panel} from "@/components/ui";
@@ -30,54 +36,147 @@ type XIdentity = {
   devMode: boolean;
 };
 
-function AuthSteps({
-  step,
-  skipTwitter,
-}: {
-  step: 1 | 2 | 3;
-  skipTwitter?: boolean;
-}) {
-  const steps = skipTwitter
-    ? [
-        {n: 1 as const, label: "Wallet"},
-        {n: 3 as const, label: "Passkey"},
-      ]
-    : [
-        {n: 1 as const, label: "Wallet"},
-        {n: 2 as const, label: "Twitter"},
-        {n: 3 as const, label: "Passkey"},
-      ];
+type Step = {label: string; hint: string};
 
+const CLAIM_STEPS: Step[] = [
+  {label: "Wallet", hint: "Connect your Midnight wallet"},
+  {label: "Name", hint: "Pick your .night name"},
+  {label: "Passkey", hint: "Secure it with Face ID, Touch ID or Windows Hello"},
+];
+
+const SIGNIN_STEPS: Step[] = [
+  {label: "Wallet", hint: "Connect your Midnight wallet"},
+  {label: "Passkey", hint: "Unlock your passport"},
+];
+
+/** "Step 2 of 3" header with a filling bar and labelled dots. */
+function AuthSteps({steps, current}: {steps: Step[]; current: number}) {
+  const pct = ((current + 1) / steps.length) * 100;
   return (
-    <ol className="mb-6 flex items-center gap-2">
-      {steps.map((s, i) => {
-        const active = step === s.n || (skipTwitter && step === 3 && s.n === 3);
-        const done = skipTwitter
-          ? s.n === 1 && step >= 3
-          : step > s.n;
-        return (
-          <li key={s.n} className="flex min-w-0 flex-1 items-center gap-2">
-            {i > 0 ? <span className="h-px w-3 shrink-0 bg-fog" /> : null}
-            <span
-              className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full font-mono text-[11px] font-medium ${
-                done || active
-                  ? "bg-ink text-paper"
-                  : "border border-fog bg-white text-graphite"
-              }`}
-            >
-              {done ? "✓" : i + 1}
-            </span>
-            <span
-              className={`truncate text-xs font-medium ${
-                active ? "text-ink" : "text-graphite"
-              }`}
-            >
-              {s.label}
-            </span>
-          </li>
-        );
-      })}
-    </ol>
+    <div className="mb-6 space-y-3">
+      <div className="flex items-baseline justify-between gap-3">
+        <p className="text-sm font-semibold tracking-tight text-ink">
+          {steps[current].hint}
+        </p>
+        <p className="shrink-0 font-mono text-[11px] text-graphite">
+          Step {current + 1} of {steps.length}
+        </p>
+      </div>
+      <div className="h-1 overflow-hidden rounded-full bg-fog/70">
+        <motion.div
+          className="h-full rounded-full bg-ink"
+          initial={false}
+          animate={{width: `${pct}%`}}
+          transition={{type: "spring", stiffness: 160, damping: 26}}
+        />
+      </div>
+      <ol className="flex items-center gap-2">
+        {steps.map((s, i) => {
+          const done = i < current;
+          const active = i === current;
+          return (
+            <li key={s.label} className="flex min-w-0 flex-1 items-center gap-2">
+              {i > 0 ? <span className="h-px w-3 shrink-0 bg-fog" /> : null}
+              <span
+                className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full font-mono text-[11px] font-medium ${
+                  done || active
+                    ? "bg-ink text-paper"
+                    : "border border-fog bg-white text-graphite"
+                }`}
+              >
+                {done ? "✓" : i + 1}
+              </span>
+              <span
+                className={`truncate text-xs font-medium ${
+                  active ? "text-ink" : "text-graphite"
+                }`}
+              >
+                {s.label}
+              </span>
+            </li>
+          );
+        })}
+      </ol>
+    </div>
+  );
+}
+
+type Availability =
+  | {state: "idle"}
+  | {state: "invalid"; message: string}
+  | {state: "checking"}
+  | {state: "free"; name: string}
+  | {state: "taken"; name: string};
+
+/** Keep only what a .night name allows, as the user types. */
+function cleanNameInput(raw: string): string {
+  return raw
+    .toLowerCase()
+    .replace(/^@+/, "")
+    .replace(/\.night$/, "")
+    .replace(/[^a-z0-9_-]/g, "")
+    .slice(0, 27);
+}
+
+/** Debounced check against the on-chain registry (works without a wallet). */
+function useNameAvailability(raw: string): Availability {
+  const [result, setResult] = useState<Availability>({state: "idle"});
+  useEffect(() => {
+    if (!raw) {
+      setResult({state: "idle"});
+      return;
+    }
+    let name: string;
+    try {
+      name = normalizeName(raw);
+    } catch {
+      setResult({
+        state: "invalid",
+        message: "2–27 characters: letters, numbers, - or _. Start with a letter or number.",
+      });
+      return;
+    }
+    if (isReservedPath(name)) {
+      setResult({state: "invalid", message: `${name}.night is reserved by the app.`});
+      return;
+    }
+    setResult({state: "checking"});
+    let cancelled = false;
+    const t = setTimeout(() => {
+      resolveName(name)
+        .then((rec) => {
+          if (!cancelled) setResult(rec ? {state: "taken", name} : {state: "free", name});
+        })
+        // Couldn't reach the registry: let the claim itself be the check.
+        .catch(() => !cancelled && setResult({state: "free", name}));
+    }, 350);
+    return () => {
+      cancelled = true;
+      clearTimeout(t);
+    };
+  }, [raw]);
+  return result;
+}
+
+/** Optional after claiming: link X and email so people can pay @handle. */
+function LinkSocialsNudge({username}: {username: string}) {
+  return (
+    <div className="space-y-3 rounded-2xl border border-fog bg-paper/60 p-4">
+      <div>
+        <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-graphite">
+          Optional · do it now or later
+        </p>
+        <p className="mt-1 text-sm font-semibold text-ink">
+          Get paid by your X handle or email
+        </p>
+        <p className="mt-0.5 text-xs leading-relaxed text-graphite">
+          Link them to {username}.night so people can pay @you without knowing your
+          .night name. You can always do this from your profile.
+        </p>
+      </div>
+      <ConnectTwitterCard />
+      <ConnectEmailCard />
+    </div>
   );
 }
 
@@ -96,6 +195,28 @@ function RegisterFlowInner({x}: {x: XIdentity}) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [justClaimed, setJustClaimed] = useState(false);
+  const [nameInput, setNameInput] = useState("");
+  const [wantX, setWantX] = useState(false);
+  const availability = useNameAvailability(nameInput);
+
+  // Suggest the X handle as the name: when the user asked for it, or the
+  // field is still empty and an X session already exists.
+  useEffect(() => {
+    if (!twitterHandle) return;
+    if (wantX || !nameInput) {
+      setNameInput(cleanNameInput(twitterHandle));
+      setWantX(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [twitterHandle, wantX]);
+
+  function fillFromX() {
+    if (twitterHandle) setNameInput(cleanNameInput(twitterHandle));
+    else {
+      setWantX(true);
+      login();
+    }
+  }
 
   async function signInOrRegister(mode: "signin" | "register") {
     setError("");
@@ -107,11 +228,14 @@ function RegisterFlowInner({x}: {x: XIdentity}) {
 
     const clean =
       mode === "register"
-        ? (twitterHandle || "").trim().toLowerCase().replace(/^@/, "")
+        ? availability.state === "free" || availability.state === "taken"
+          ? availability.name
+          : ""
         : (user?.username || knownUsername).trim().toLowerCase().replace(/^@/, "");
 
-    if (mode === "register" && !TWITTER_USERNAME_RE.test(clean)) {
-      const msg = "Connect Twitter first. Your X handle becomes your .night name.";
+    if (mode === "register" && !clean) {
+      const msg =
+        availability.state === "invalid" ? availability.message : "Pick a .night name first.";
       setError(msg);
       toast.error(msg);
       return;
@@ -151,13 +275,14 @@ function RegisterFlowInner({x}: {x: XIdentity}) {
       }
 
       const claimed = await claimPassport(clean);
-      // Link the X handle on-chain with an attestation (best effort: the
-      // name is already yours if this step fails, retry from the profile).
-      let xLinked = claimed.profile.social === `x:${clean}`;
-      if (!xLinked) {
+      // X is optional. If an X session exists, link it on-chain with an
+      // attestation (best effort: the name is already yours if this fails,
+      // retry from the profile).
+      let xLinked = !!claimed.profile.social;
+      if (!xLinked && twitterHandle) {
         try {
           const accessToken = x.devMode ? null : await x.getAccessToken();
-          await linkX(x.devMode ? {handle: clean} : {privyAccessToken: accessToken ?? undefined});
+          await linkX(x.devMode ? {handle: twitterHandle} : {privyAccessToken: accessToken ?? undefined});
           xLinked = true;
         } catch (e) {
           console.error("[hushh] linking X failed", e);
@@ -211,17 +336,21 @@ function RegisterFlowInner({x}: {x: XIdentity}) {
           </p>
           {justClaimed ? (
             <p className="mt-2 text-sm text-graphite">
-              Your X handle is now your .night name, owned by your passkey on Midnight.
+              {user.username}.night is yours, owned by your passkey on Midnight. No seed phrase.
             </p>
           ) : null}
         </div>
+        {/* Not while a claim is still finishing: it may be linking X itself. */}
+        {!busy && (!user.twitterUsername || !user.emailLinked) ? (
+          <LinkSocialsNudge username={user.username} />
+        ) : null}
         <NetworkGate>
           <div className="flex flex-col gap-2 sm:flex-row">
             <a href={`/${encodeURIComponent(user.username)}`} className="btn-primary">
               View profile
             </a>
             <a href="/send" className="btn-ghost">
-              Send
+              Send your first payment
             </a>
           </div>
         </NetworkGate>
@@ -245,23 +374,18 @@ function RegisterFlowInner({x}: {x: XIdentity}) {
   // Existing DB users only sign in — never prompt Twitter again.
   const needsClaim = isConnected && !hasClaimedUsername;
 
-  const step: 1 | 2 | 3 = !isConnected
-    ? 1
-    : needsClaim && !twitterHandle
-      ? 2
-      : isConnected
-        ? 3
-        : 1;
+  const steps = hasClaimedUsername ? SIGNIN_STEPS : CLAIM_STEPS;
+  const current = !isConnected ? 0 : hasClaimedUsername ? 1 : busy ? 2 : 1;
 
   return (
     <Panel className="space-y-5 text-left">
-      <AuthSteps step={step} skipTwitter={hasClaimedUsername} />
+      <AuthSteps steps={steps} current={current} />
 
       {!isConnected ? (
         <div className="space-y-4 py-1 text-center">
           <p className="text-sm leading-relaxed text-graphite">
-            Connect your Midnight wallet, then connect Twitter. Your X handle
-            becomes your .night passport name, secured by a passkey.
+            Three quick steps: connect a wallet, pick a .night name, and
+            secure it with a passkey. Linking X or email is optional.
           </p>
           <ConnectButton label="Connect wallet" />
         </div>
@@ -282,68 +406,87 @@ function RegisterFlowInner({x}: {x: XIdentity}) {
 
               {needsClaim ? (
                 <>
-                  {!twitterHandle ? (
-                    <>
-                      <div className="flex items-start gap-3 rounded-xl border border-amber/40 bg-amber/10 px-4 py-3">
-                        <span
-                          className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-amber"
-                          aria-hidden
-                        />
-                        <p className="text-sm text-graphite">
-                          Connect Twitter. Your X handle becomes your .night
-                          name and is linked to it on-chain.
-                        </p>
-                      </div>
+                  <div className="space-y-2">
+                    <div className="flex items-end justify-between gap-3">
+                      <label htmlFor="night-name" className="text-xs font-medium text-graphite">
+                        Your .night name
+                      </label>
                       <button
                         type="button"
                         disabled={!privyReady || busy}
-                        onClick={() => login()}
-                        className="btn-primary"
+                        onClick={fillFromX}
+                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-ink underline-offset-2 hover:underline disabled:opacity-50"
                       >
-                        {!privyReady ? (
-                          <LoaderIcon className="h-5 w-5 animate-spin" />
-                        ) : (
-                          <XBrandIcon className="h-5 w-5" />
-                        )}
-                        Connect with Twitter
+                        <XBrandIcon className="h-3 w-3" />
+                        {twitterHandle ? `Use @${twitterHandle}` : "Use my X handle"}
                       </button>
-                    </>
-                  ) : (
-                    <>
-                      <div className="rounded-2xl border border-fog bg-white px-4 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-ink text-paper">
-                            <XBrandIcon className="h-4 w-4" />
-                          </div>
-                          <div className="min-w-0">
-                            <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-graphite">
-                              Claiming as
-                            </p>
-                            <p className="mt-0.5 text-2xl font-bold tracking-tight text-ink">
-                              @{twitterHandle}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                      <p className="text-sm text-graphite">
-                        Create a passkey to claim {twitterHandle}.night. No seed
-                        phrase: your passkey is your passport.
-                      </p>
-                      <button
-                        type="button"
+                    </div>
+                    <div
+                      className={`flex items-center rounded-2xl border bg-white px-4 py-3 transition-colors focus-within:border-ink ${
+                        availability.state === "invalid" ? "border-amber/60" : "border-fog"
+                      }`}
+                    >
+                      <input
+                        id="night-name"
+                        value={nameInput}
+                        onChange={(e) => setNameInput(cleanNameInput(e.target.value))}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && !busy) void signInOrRegister("register");
+                        }}
                         disabled={busy}
-                        onClick={() => signInOrRegister("register")}
-                        className="btn-primary"
-                      >
-                        {busy ? (
-                          <LoaderIcon className="h-5 w-5 animate-spin" />
-                        ) : null}
-                        {busy
-                          ? "Proving on Midnight…"
-                          : `Sign and claim @${twitterHandle}`}
-                      </button>
-                    </>
-                  )}
+                        placeholder="yourname"
+                        autoComplete="off"
+                        autoCapitalize="none"
+                        spellCheck={false}
+                        className="min-w-0 flex-1 bg-transparent text-2xl font-bold tracking-tight text-ink outline-none placeholder:text-fog"
+                      />
+                      <span className="shrink-0 text-lg font-semibold text-graphite">.night</span>
+                    </div>
+                    <p
+                      aria-live="polite"
+                      className={`min-h-[1.25rem] text-xs ${
+                        availability.state === "free"
+                          ? "text-signal"
+                          : availability.state === "invalid"
+                            ? "text-amber"
+                            : "text-graphite"
+                      }`}
+                    >
+                      {availability.state === "idle"
+                        ? "Anything you like. People can send NIGHT to this name."
+                        : availability.state === "checking"
+                          ? "Checking…"
+                          : availability.state === "free"
+                            ? `✓ ${availability.name}.night is available`
+                            : availability.state === "taken"
+                              ? `${availability.name}.night is taken. If it's yours, continue to sign in with your passkey.`
+                              : availability.message}
+                    </p>
+                  </div>
+                  <p className="text-sm text-graphite">
+                    Next, your device asks for Face ID, Touch ID or Windows Hello.
+                    That passkey is your passport: no seed phrase.
+                  </p>
+                  <button
+                    type="button"
+                    disabled={
+                      busy ||
+                      availability.state === "idle" ||
+                      availability.state === "invalid" ||
+                      availability.state === "checking"
+                    }
+                    onClick={() => signInOrRegister("register")}
+                    className="btn-primary"
+                  >
+                    {busy ? <LoaderIcon className="h-5 w-5 animate-spin" /> : null}
+                    {busy
+                      ? "Proving on Midnight…"
+                      : availability.state === "taken"
+                        ? `Sign in as ${availability.name}.night`
+                        : availability.state === "free"
+                          ? `Claim ${availability.name}.night`
+                          : "Claim name"}
+                  </button>
                 </>
               ) : (
                 <>

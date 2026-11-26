@@ -412,6 +412,21 @@ export async function connectWallet(): Promise<WalletSession> {
   return session;
 }
 
+/**
+ * Browser extensions inject window.midnight a moment after the page loads.
+ * Wait for it (up to `timeoutMs`) so a reload can reconnect instead of
+ * deciding there is no wallet.
+ */
+export async function waitForWallet(timeoutMs = 4000): Promise<boolean> {
+  if (WALLET_MODE === "dev" || detectWallets().length > 0) return true;
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    await new Promise((r) => setTimeout(r, 150));
+    if (detectWallets().length > 0) return true;
+  }
+  return false;
+}
+
 export function walletAvailable(): boolean {
   return WALLET_MODE === "dev" || detectWallets().length > 0;
 }

@@ -283,39 +283,6 @@ export function ScratchPaymentForm() {
     }
   }
 
-  if (!isConnected) {
-    return (
-      <div className="mx-auto max-w-md overflow-hidden rounded-[1.75rem] border border-fog bg-white/95 shadow-[0_18px_40px_-28px_rgba(10,10,10,0.35)]">
-        <div className="relative bg-ink px-6 pb-8 pt-8 text-center">
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-0 opacity-40"
-            style={{
-              backgroundImage: `
-                radial-gradient(circle at 30% 40%, rgba(255,255,255,0.12) 0 1px, transparent 1.5px),
-                radial-gradient(ellipse 60% 50% at 70% 20%, rgba(240,122,26,0.25), transparent)
-              `,
-              backgroundSize: "16px 16px, auto",
-            }}
-          />
-          <p className="relative text-[10px] font-medium uppercase tracking-[0.16em] text-white/45">
-            Wallet required
-          </p>
-          <p className="relative mt-2 text-lg font-bold tracking-tight text-white">
-            Connect to open the gift studio
-          </p>
-          <p className="relative mx-auto mt-2 max-w-xs text-[13px] leading-relaxed text-white/55">
-            Design the ticket, fund it with NIGHT, and send it to a .night
-            name or any X handle.
-          </p>
-          <div className="relative mt-5 flex justify-center">
-            <ConnectButton label="Connect wallet" />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   const previewCard = (
     <ScratchRevealCard
       key={`${theme}-${previewAmount}-${previewTitle}-${previewRevealed}`}
@@ -335,7 +302,17 @@ export function ScratchPaymentForm() {
     />
   );
 
-  const formFields = !isSignedIn ? (
+  // Visitors see the live preview; the form asks for a wallet / passport
+  // only when they're ready to design and fund a card.
+  const formFields = !isConnected ? (
+    <div className="space-y-4 rounded-2xl border border-dashed border-fog bg-paper/60 px-4 py-6 text-center">
+      <p className="text-sm leading-relaxed text-graphite">
+        Try the preview on the right. Connect a Midnight wallet when you&apos;re
+        ready to design, fund and send a card.
+      </p>
+      <ConnectButton label="Connect wallet" />
+    </div>
+  ) : !isSignedIn ? (
     <div className="space-y-4 rounded-2xl border border-dashed border-fog bg-paper/60 px-4 py-6 text-center">
       <p className="text-sm leading-relaxed text-graphite">
         Sign in so the encrypted gift card can land in their inbox.

@@ -130,7 +130,13 @@ export default function IslandNav() {
               </Link>
             </>
           ) : (
-            <>{tab("/lookout", "Lookout")}</>
+            // Visitors can look around first; each page asks for a wallet
+            // only when it's actually needed.
+            <>
+              {tab("/send", "Send")}
+              {tab("/scratch", "Gift Card", {showOnMobile: false})}
+              {tab("/lookout", "Lookout")}
+            </>
           )}
 
           <ConnectButton

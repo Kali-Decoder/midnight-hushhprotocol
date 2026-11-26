@@ -1,8 +1,5 @@
-const SOUND_URLS = [
-  "/sounds/intellimouse-click.mp3",
-  "/sounds/logitech-g203-click.mp3",
-  "/sounds/razer-deathadder-click.mp3",
-] as const;
+/** One consistent click for every control. */
+const SOUND_URL = "/sounds/logitech-g203-click.mp3";
 
 const VOLUME = 0.55;
 
@@ -12,26 +9,23 @@ let primed = false;
 export function primeClickSounds() {
   if (typeof window === "undefined" || primed) return;
   primed = true;
-  for (const src of SOUND_URLS) {
-    const a = new Audio(src);
-    a.preload = "auto";
-    a.volume = 0;
-    void a.play().then(
-      () => {
-        a.pause();
-        a.currentTime = 0;
-      },
-      () => {}
-    );
-  }
+  const a = new Audio(SOUND_URL);
+  a.preload = "auto";
+  a.volume = 0;
+  void a.play().then(
+    () => {
+      a.pause();
+      a.currentTime = 0;
+    },
+    () => {}
+  );
 }
 
-/** Play a random mouse-click sample (overlaps safely). */
+/** Play the click sample (overlaps safely). */
 export function playClick() {
   if (typeof window === "undefined") return;
   primeClickSounds();
-  const src = SOUND_URLS[Math.floor(Math.random() * SOUND_URLS.length)]!;
-  const audio = new Audio(src);
+  const audio = new Audio(SOUND_URL);
   audio.volume = VOLUME;
   void audio.play().catch(() => {});
 }

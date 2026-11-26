@@ -1,5 +1,6 @@
 "use client";
 
+import {formatError} from "@/lib/errors";
 import {useState} from "react";
 import {useAccount, useConnect, useDisconnect} from "@/lib/midnight/hooks";
 import {toast} from "@/lib/toast";
@@ -100,7 +101,7 @@ export function ConnectButton({
         {busy ? "Connecting…" : label}
       </button>
       {error && !compact ? (
-        <p className="mt-2 text-center text-xs text-amber">{error.message}</p>
+        <p className="mt-2 text-center text-xs text-amber">{formatError(error)}</p>
       ) : null}
     </>
   );

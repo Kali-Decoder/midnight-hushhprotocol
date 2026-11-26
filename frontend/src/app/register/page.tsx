@@ -7,7 +7,7 @@ export default function RegisterPage() {
   return (
     <AppShell
       title="Sign in"
-      subtitle="Connect wallet → connect Twitter → passkey. Your X handle becomes your .night passport."
+      subtitle="Connect a wallet, pick a .night name, secure it with a passkey. Link X or email later if you like."
     >
       <RegisterFlow />
     </AppShell>

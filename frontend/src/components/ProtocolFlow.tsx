@@ -8,7 +8,7 @@ const PHASES = [
     id: "identity",
     n: "01",
     title: "Connect & claim",
-    body: "Connect a Midnight wallet, then create a passkey. Your X handle becomes your .night name on Midnight Passport. No seed phrase, and senders never need your address.",
+    body: "Connect a Midnight wallet, then create a passkey. Pick a .night name (your X handle works great) on Midnight Passport. No seed phrase, and senders never need your address.",
     nodes: ["wallet", "app", "identity"],
     edges: ["you-hussh", "within-hussh"],
     lane: "Client",

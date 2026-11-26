@@ -395,9 +395,16 @@ export function SendForm({initialRecipient}: {initialRecipient?: string}) {
         {!isConnected ? (
           <div className="space-y-4 py-2 text-center">
             <p className="text-sm text-graphite">
-              Connect a Midnight wallet to send NIGHT.
+              Pay anyone by their .night name, X handle or email. Connect a
+              Midnight wallet when you&apos;re ready to send.
             </p>
             <ConnectButton label="Connect wallet" />
+            <p className="text-xs text-graphite">
+              Just looking?{" "}
+              <a href="/lookout" className="font-semibold text-ink underline-offset-2 hover:underline">
+                Check if someone has a passport
+              </a>
+            </p>
           </div>
         ) : (
           <NetworkGate>

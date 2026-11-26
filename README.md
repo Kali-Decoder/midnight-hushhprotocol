@@ -4,7 +4,7 @@ Own your `.night` name with **Midnight Passport**, link your X handle to it, and
 
 Tagline: send silently.
 
-**Live app:** https://midnight-hushh.vercel.app · **X:** [@hushhprotocol](https://x.com/hushhprotocol)
+**Live app:** https://hushh.accuracy.wtf · **X:** [@hushhprotocol](https://x.com/hushhprotocol)
 
 > Prototype. Contracts are unaudited and target the local devnet and Midnight test networks. Do not use with real value.
 
