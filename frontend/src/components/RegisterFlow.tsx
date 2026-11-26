@@ -423,7 +423,11 @@ function RegisterFlowInner({x}: {x: XIdentity}) {
                     </div>
                     <div
                       className={`flex items-center rounded-2xl border bg-white px-4 py-3 transition-colors focus-within:border-ink ${
-                        availability.state === "invalid" ? "border-amber/60" : "border-fog"
+                        availability.state === "invalid"
+                          ? "border-amber/60"
+                          : availability.state === "taken"
+                            ? "border-red-400"
+                            : "border-fog"
                       }`}
                     >
                       <input
@@ -447,9 +451,11 @@ function RegisterFlowInner({x}: {x: XIdentity}) {
                       className={`min-h-[1.25rem] text-xs ${
                         availability.state === "free"
                           ? "text-signal"
-                          : availability.state === "invalid"
-                            ? "text-amber"
-                            : "text-graphite"
+                          : availability.state === "taken"
+                            ? "font-semibold text-red-600"
+                            : availability.state === "invalid"
+                              ? "text-amber"
+                              : "text-graphite"
                       }`}
                     >
                       {availability.state === "idle"
