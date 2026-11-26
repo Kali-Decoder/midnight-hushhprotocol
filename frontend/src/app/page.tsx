@@ -4,6 +4,7 @@ import InteractivePillars from "@/components/InteractivePillars";
 import LandingCta from "@/components/LandingCta";
 import LandingHero from "@/components/LandingHero";
 import ProtocolFlow from "@/components/ProtocolFlow";
+import IdentityGraph from "@/components/landing/IdentityGraph";
 import PassportShowcase from "@/components/landing/PassportShowcase";
 import PayMarquee from "@/components/landing/PayMarquee";
 import ScrollProgress from "@/components/landing/ScrollProgress";
@@ -20,6 +21,8 @@ export default function Home() {
       </div>
 
       <PassportShowcase />
+
+      <IdentityGraph />
 
       <div id="architecture" className="landing-band w-full max-w-6xl scroll-mt-28">
         <ProtocolFlow />
