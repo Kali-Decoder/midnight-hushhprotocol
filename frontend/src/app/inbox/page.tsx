@@ -1,7 +1,7 @@
 import {Inbox} from "@/components/Inbox";
 import {AppShell} from "@/components/AppShell";
 
-export const metadata = {title: "Inbox · Hushh Protocol"};
+export const metadata = {title: "Inbox", robots: {index: false}};
 
 export default function InboxPage() {
   return (

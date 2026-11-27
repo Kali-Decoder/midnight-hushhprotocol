@@ -4,7 +4,8 @@ import PassportShowcase from "@/components/landing/PassportShowcase";
 import InteractivePillars from "@/components/InteractivePillars";
 
 export const metadata: Metadata = {
-  title: "Midnight Passport · Hushh Protocol",
+  title: "Midnight Passport",
+  alternates: {canonical: "/passport"},
   description:
     "Own a .night name with a passkey, link your X and email, and get paid in NIGHT on Midnight.",
 };

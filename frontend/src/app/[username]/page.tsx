@@ -12,9 +12,13 @@ export async function generateMetadata({params}: Props): Promise<Metadata> {
   const {username: raw} = await params;
   const username = normalizeUsernameParam(raw);
   if (!username || isReservedPath(username)) {
-    return {title: "Not found · Hushh Protocol"};
+    return {title: "Not found", robots: {index: false}};
   }
-  return {title: `@${username} · Hushh Protocol`};
+  return {
+    title: `@${username}`,
+    description: `Pay @${username} privately in NIGHT on Midnight. Tips are sealed to their .night passport.`,
+    alternates: {canonical: `/${username}`},
+  };
 }
 
 export default async function UsernameProfilePage({params}: Props) {

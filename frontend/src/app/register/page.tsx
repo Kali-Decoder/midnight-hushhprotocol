@@ -1,7 +1,7 @@
 import {RegisterFlow} from "@/components/RegisterFlow";
 import {AppShell} from "@/components/AppShell";
 
-export const metadata = {title: "Sign in · Hushh Protocol"};
+export const metadata = {title: "Sign in", alternates: {canonical: "/register"}};
 
 export default function RegisterPage() {
   return (

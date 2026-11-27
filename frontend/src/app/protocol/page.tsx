@@ -6,7 +6,8 @@ import InteractiveNoteStrip from "@/components/InteractiveNoteStrip";
 import StatsBand from "@/components/landing/StatsBand";
 
 export const metadata: Metadata = {
-  title: "Protocol · Hushh Protocol",
+  title: "Protocol",
+  alternates: {canonical: "/protocol"},
   description:
     "How Hushh works on Midnight: the night_registry and hushh_vault Compact contracts, sealed tips and zero-knowledge claims.",
 };

@@ -1,6 +1,6 @@
 import {ScratchPaymentForm} from "@/components/ScratchPaymentForm";
 
-export const metadata = {title: "Create Gift Card · Hushh Protocol"};
+export const metadata = {title: "Create Gift Card", alternates: {canonical: "/scratch"}};
 
 const STEPS = [
   {n: "01", label: "Design", hint: "Name, color, note"},

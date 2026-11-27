@@ -1,7 +1,7 @@
 import {LookoutForm} from "@/components/LookoutForm";
 import {AppShell} from "@/components/AppShell";
 
-export const metadata = {title: "Lookout · Hushh Protocol"};
+export const metadata = {title: "Lookout", alternates: {canonical: "/lookout"}};
 
 export default function LookoutPage() {
   return (

@@ -1,7 +1,7 @@
 import {AppShell} from "@/components/AppShell";
 import {DeployPanel} from "@/components/DeployPanel";
 
-export const metadata = {title: "Deploy · Hushh Protocol"};
+export const metadata = {title: "Deploy", robots: {index: false}};
 
 export default function DeployPage() {
   return (

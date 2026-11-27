@@ -17,32 +17,57 @@ const geistMono = Geist_Mono({
 /** Production domain. Override with NEXT_PUBLIC_SITE_URL for previews. */
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://hushh.accuracy.wtf";
 
+const TITLE = "Hushh Protocol · Pay anyone by @name";
+const DESCRIPTION =
+  "Own a .night name with a passkey, link your X, and get paid in NIGHT on Midnight. Tips are sealed to you and claimed with a zero-knowledge proof.";
+const SHARE_DESCRIPTION =
+  "Pay anyone by @name. Own a .night name, get tips sealed to you, and claim them with a zero-knowledge proof on Midnight.";
+
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  alternates: {canonical: "/"},
-  title: "Hushh Protocol · send silently.",
-  description:
-    "Own your .night name, link your X, and send NIGHT on Midnight. Tips are sealed to the recipient and claimed with a zero-knowledge proof.",
+  applicationName: "Hushh Protocol",
+  title: {default: TITLE, template: "%s · Hushh Protocol"},
+  description: DESCRIPTION,
+  keywords: [
+    "Hushh Protocol",
+    "Midnight",
+    "Midnight Network",
+    "NIGHT",
+    ".night name",
+    "Midnight Passport",
+    "private payments",
+    "zero-knowledge",
+    "tips",
+  ],
+  authors: [{name: "Hushh Protocol", url: SITE_URL}],
+  creator: "Hushh Protocol",
+  publisher: "Hushh Protocol",
+  category: "finance",
+  formatDetection: {telephone: false, email: false, address: false},
+  // Image URLs come from app/opengraph-image.tsx and app/twitter-image.tsx;
+  // icons from app/icon.png and app/apple-icon.png.
   openGraph: {
     type: "website",
-    url: SITE_URL,
+    locale: "en_US",
     siteName: "Hushh Protocol",
-    title: "Hushh Protocol · send silently.",
-    description: "Own a .night name with Midnight Passport, link your X and email, and get paid privately in NIGHT.",
+    title: TITLE,
+    description: SHARE_DESCRIPTION,
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     site: "@hushhprotocol",
     creator: "@hushhprotocol",
-    title: "Hushh Protocol · send silently.",
-    description: "Own a .night name with Midnight Passport, link your X and email, and get paid privately in NIGHT.",
+    title: TITLE,
+    description: SHARE_DESCRIPTION,
   },
+  appleWebApp: {title: "Hushh", statusBarStyle: "black-translucent"},
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
+  themeColor: "#0a0a0a",
 };
 
 export default function RootLayout({children}: {children: React.ReactNode}) {

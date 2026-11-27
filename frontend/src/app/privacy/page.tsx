@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Privacy · Hushh Protocol",
+  title: "Privacy",
+  alternates: {canonical: "/privacy"},
   description:
     "What Hushh Protocol hides on Midnight, and what it does not. Midnight Passport, sealed tips, ZK claims, honest limits.",
 };
