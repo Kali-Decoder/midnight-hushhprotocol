@@ -296,18 +296,17 @@
   }
 }
 
+/*
+ * Card surfaces, matched to the story landing: white sheets, hairline
+ * fog border, long soft shadow, generous radius.
+ */
 .panel {
-  border: 1px solid color-mix(in srgb, var(--color-fog) 88%, var(--color-ink));
-  border-radius: 1.35rem;
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, white 98%, var(--color-paper)) 0%,
-      color-mix(in srgb, white 92%, var(--color-paper)) 100%
-    );
+  border: 1px solid color-mix(in srgb, var(--color-fog) 80%, var(--color-ink) 6%);
+  border-radius: 1.75rem;
+  background: white;
   box-shadow:
-    0 1px 0 color-mix(in srgb, white 70%, transparent) inset,
-    0 18px 40px -28px color-mix(in srgb, var(--color-ink) 18%, transparent);
+    0 1px 2px color-mix(in srgb, var(--color-ink) 4%, transparent),
+    0 24px 60px -34px color-mix(in srgb, var(--color-ink) 32%, transparent);
   transition:
     border-color 280ms cubic-bezier(0.16, 1, 0.3, 1),
     box-shadow 280ms cubic-bezier(0.16, 1, 0.3, 1),
@@ -315,10 +314,32 @@
 }
 
 .panel:hover {
-  border-color: color-mix(in srgb, var(--color-fog) 70%, var(--color-graphite));
+  border-color: color-mix(in srgb, var(--color-fog) 60%, var(--color-graphite));
   box-shadow:
-    0 1px 0 color-mix(in srgb, white 70%, transparent) inset,
-    0 22px 48px -26px color-mix(in srgb, var(--color-ink) 24%, transparent);
+    0 1px 2px color-mix(in srgb, var(--color-ink) 4%, transparent),
+    0 30px 70px -32px color-mix(in srgb, var(--color-ink) 38%, transparent);
+}
+
+/* Plain inner card: sits inside a panel or app sheet. */
+.card {
+  border: 1px solid color-mix(in srgb, var(--color-fog) 80%, var(--color-ink) 6%);
+  border-radius: 1.4rem;
+  background: white;
+  box-shadow: 0 14px 34px -26px color-mix(in srgb, var(--color-ink) 30%, transparent);
+}
+
+/* Soft signal wash, like the landing amount blocks. */
+.card-wash {
+  border: 1px solid color-mix(in srgb, var(--color-signal) 14%, transparent);
+  border-radius: 1.4rem;
+  background: color-mix(in srgb, var(--color-signal) 7%, var(--color-paper));
+}
+
+/* Empty / call-to-action state. */
+.card-dashed {
+  border: 1.5px dashed color-mix(in srgb, var(--color-fog) 70%, var(--color-graphite));
+  border-radius: 1.4rem;
+  background: color-mix(in srgb, var(--color-paper) 55%, white);
 }
 
 .landing-band {
@@ -343,10 +364,10 @@
 
 .field {
   width: 100%;
-  border-radius: 1rem;
-  border: 1px solid var(--color-fog);
-  background: white;
-  padding: 0.875rem 1rem;
+  border-radius: 1.1rem;
+  border: 1px solid color-mix(in srgb, var(--color-fog) 85%, var(--color-ink) 4%);
+  background: color-mix(in srgb, var(--color-paper) 35%, white);
+  padding: 0.9rem 1.05rem;
   letter-spacing: -0.01em;
   transition:
     border-color 220ms cubic-bezier(0.16, 1, 0.3, 1),
@@ -360,8 +381,9 @@
 }
 
 .field:focus {
-  border-color: var(--color-ink);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-ink) 8%, transparent);
+  border-color: var(--color-signal);
+  background: white;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-signal) 14%, transparent);
   outline: none;
 }
 
@@ -371,14 +393,13 @@
   width: 100%;
   align-items: center;
   gap: 0.25rem;
-  border-radius: 1.15rem;
-  border: 1px solid color-mix(in srgb, var(--color-fog) 90%, var(--color-ink));
-  background: color-mix(in srgb, white 94%, var(--color-paper));
-  padding: 0.35rem 0.75rem 0.35rem 0.35rem;
+  border-radius: 1.35rem;
+  border: 1px solid color-mix(in srgb, var(--color-fog) 85%, var(--color-ink) 5%);
+  background: color-mix(in srgb, var(--color-paper) 35%, white);
+  padding: 0.4rem 0.8rem 0.4rem 0.4rem;
   box-shadow:
-    0 1px 0 color-mix(in srgb, white 75%, transparent) inset,
-    0 1px 0 color-mix(in srgb, var(--color-ink) 3%, transparent),
-    0 16px 36px -24px color-mix(in srgb, var(--color-ink) 22%, transparent);
+    0 1px 2px color-mix(in srgb, var(--color-ink) 4%, transparent),
+    0 18px 40px -30px color-mix(in srgb, var(--color-ink) 30%, transparent);
   transition:
     border-color 280ms cubic-bezier(0.16, 1, 0.3, 1),
     box-shadow 280ms cubic-bezier(0.16, 1, 0.3, 1),
@@ -392,12 +413,12 @@
 }
 
 .input-shell:focus-within {
-  border-color: var(--color-ink);
+  border-color: var(--color-signal);
   background: white;
-  transform: scale(1.012);
+  transform: scale(1.008);
   box-shadow:
-    0 0 0 4px color-mix(in srgb, var(--color-ink) 7%, transparent),
-    0 14px 36px -18px color-mix(in srgb, var(--color-ink) 28%, transparent);
+    0 0 0 4px color-mix(in srgb, var(--color-signal) 14%, transparent),
+    0 18px 40px -22px color-mix(in srgb, var(--color-ink) 30%, transparent);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -415,7 +436,7 @@
 }
 
 .input-shell:focus-within .input-shell-divider {
-  background: color-mix(in srgb, var(--color-ink) 22%, var(--color-fog));
+  background: color-mix(in srgb, var(--color-signal) 35%, var(--color-fog));
 }
 
 .input-shell-field {
@@ -469,33 +490,36 @@
   gap: 0.5rem;
   border-radius: 9999px;
   background: var(--color-ink);
-  padding: 0.9rem 1.35rem;
-  font-weight: 600;
+  padding: 0.95rem 1.5rem;
+  font-weight: 700;
   letter-spacing: -0.015em;
   color: var(--color-paper);
   box-shadow:
     0 1px 0 color-mix(in srgb, white 14%, transparent) inset,
-    0 10px 24px -14px color-mix(in srgb, var(--color-ink) 45%, transparent);
+    0 12px 28px -14px color-mix(in srgb, var(--color-ink) 55%, transparent);
   transition:
     background-color 180ms cubic-bezier(0.16, 1, 0.3, 1),
     transform 180ms cubic-bezier(0.16, 1, 0.3, 1),
-    box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 180ms ease;
 }
 
 .btn-primary:hover:not(:disabled) {
   background: color-mix(in srgb, var(--color-ink) 88%, white);
+  transform: translateY(-1px);
   box-shadow:
     0 1px 0 color-mix(in srgb, white 14%, transparent) inset,
-    0 14px 32px -14px color-mix(in srgb, var(--color-ink) 55%, transparent);
+    0 16px 34px -14px color-mix(in srgb, var(--color-ink) 60%, transparent);
 }
 
 .btn-primary:active:not(:disabled) {
-  transform: scale(0.985);
+  transform: scale(0.98);
 }
 
 .btn-primary:disabled {
-  opacity: 0.45;
+  opacity: 0.32;
   box-shadow: none;
+  cursor: not-allowed;
 }
 
 .btn-ghost {
@@ -504,25 +528,51 @@
   align-items: center;
   justify-content: center;
   border-radius: 9999px;
-  border: 1px solid var(--color-fog);
-  background: color-mix(in srgb, white 88%, transparent);
+  border: 1.5px solid color-mix(in srgb, var(--color-ink) 14%, transparent);
+  background: color-mix(in srgb, white 70%, transparent);
   padding: 0.9rem 1.35rem;
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: -0.01em;
-  color: var(--color-graphite);
+  color: var(--color-ink);
   backdrop-filter: blur(8px);
   transition:
-    border-color 150ms ease,
-    color 150ms ease,
-    background-color 150ms ease,
-    box-shadow 150ms ease;
+    border-color 180ms ease,
+    color 180ms ease,
+    background-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .btn-ghost:hover:not(:disabled) {
-  border-color: color-mix(in srgb, var(--color-graphite) 50%, var(--color-fog));
-  color: var(--color-ink);
+  border-color: var(--color-graphite);
   background: white;
-  box-shadow: 0 8px 20px -16px color-mix(in srgb, var(--color-ink) 30%, transparent);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px -18px color-mix(in srgb, var(--color-ink) 35%, transparent);
+}
+
+.btn-ghost:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+/* App sheet header (AppShell): ink band like the landing phone screens. */
+.app-sheet {
+  box-shadow:
+    0 1px 2px color-mix(in srgb, var(--color-ink) 5%, transparent),
+    0 40px 90px -50px color-mix(in srgb, var(--color-ink) 45%, transparent);
+}
+
+/* Inside the app sheet, panels sit flatter so cards don't stack shadows. */
+.app-sheet .panel {
+  box-shadow:
+    0 1px 2px color-mix(in srgb, var(--color-ink) 3%, transparent),
+    0 12px 30px -26px color-mix(in srgb, var(--color-ink) 28%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-primary:hover:not(:disabled),
+  .btn-ghost:hover:not(:disabled) {
+    transform: none;
+  }
 }
 
 @keyframes toast-in {

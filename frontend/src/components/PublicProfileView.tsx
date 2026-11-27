@@ -30,7 +30,7 @@ export function PublicProfileView({user}: {user: PublicUser}) {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-fog/80 bg-white/80 px-4 py-3">
+      <div className="rounded-[1.4rem] border border-fog/80 bg-white/80 px-4 py-3">
         <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-graphite">
           Passport tip key
         </p>

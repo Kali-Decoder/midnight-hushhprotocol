@@ -58,7 +58,7 @@ function ConnectTwitterCardInner({className = "", x}: {className?: string; x: XS
   if (!isSignedIn) {
     return (
       <div
-        className={`rounded-2xl border border-fog/80 bg-paper/50 px-4 py-3.5 ${className}`}
+        className={`rounded-[1.4rem] border border-fog/80 bg-paper/50 px-4 py-3.5 ${className}`}
       >
         <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-graphite">
           Twitter
@@ -104,7 +104,7 @@ function ConnectTwitterCardInner({className = "", x}: {className?: string; x: XS
 
   return (
     <div
-      className={`rounded-2xl border border-fog/80 bg-white px-4 py-4 ${className}`}
+      className={`card px-4 py-4 ${className}`}
     >
       <div className="flex items-start gap-3">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-ink text-paper">

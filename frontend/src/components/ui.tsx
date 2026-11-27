@@ -26,7 +26,7 @@ export function PageHeader({
     <header
       className={`mb-7 space-y-2 sm:mb-8 ${align === "center" ? "text-center" : "text-left"}`}
     >
-      <h1 className="text-3xl font-bold tracking-[-0.03em] sm:text-4xl">
+      <h1 className="text-4xl font-extrabold leading-[0.95] tracking-[-0.045em] sm:text-5xl">
         {title}
       </h1>
       {subtitle ? (
@@ -40,7 +40,7 @@ export function PageHeader({
 
 export function FieldLabel({children}: {children: ReactNode}) {
   return (
-    <p className="mb-2 text-[11px] font-medium uppercase tracking-[0.14em] text-graphite">
+    <p className="mb-2 font-mono text-[11px] font-medium uppercase tracking-[0.16em] text-graphite">
       {children}
     </p>
   );
@@ -57,7 +57,7 @@ export function ErrorBanner({
   return (
     <div
       role="alert"
-      className="flex gap-3 rounded-xl border border-red-200/90 bg-red-50/90 px-4 py-3 text-left"
+      className="flex gap-3 rounded-2xl border border-red-200/90 bg-red-50/90 px-4 py-3.5 text-left"
     >
       <AlertCircleIcon className="mt-0.5 h-4 w-4 shrink-0 text-red-600" />
       <div className="min-w-0 space-y-0.5">
@@ -72,7 +72,7 @@ export function ErrorBanner({
 
 export function WarnBanner({children}: {children: ReactNode}) {
   return (
-    <p className="rounded-xl border border-amber/40 bg-amber/10 px-3 py-2 text-sm text-ink">
+    <p className="rounded-2xl border border-amber/40 bg-amber/10 px-4 py-2.5 text-sm text-ink">
       {children}
     </p>
   );
@@ -98,7 +98,7 @@ export function AmountPills({
     <div
       role="radiogroup"
       aria-label="Amount"
-      className="flex rounded-2xl border border-fog bg-paper/70 p-1"
+      className="card-wash flex gap-1 p-1.5"
     >
       {amounts.map((a) => {
         const selected = value != null && Math.abs(value - a) < 1e-9;
@@ -113,13 +113,13 @@ export function AmountPills({
             disabled={locked}
             onClick={() => onChange(a)}
             title={!affordable ? `Insufficient ${symbol} balance` : undefined}
-            className={`relative flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-2.5 text-center transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-ink/20 disabled:cursor-not-allowed disabled:opacity-35 ${
+            className={`relative flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-[1rem] px-1 py-3 text-center transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-ink/20 disabled:cursor-not-allowed disabled:opacity-35 ${
               selected
-                ? "bg-ink text-paper shadow-[0_1px_2px_rgba(10,10,10,0.18)]"
-                : "bg-transparent text-graphite hover:bg-white/80 hover:text-ink"
+                ? "bg-ink text-paper shadow-[0_10px_22px_-12px_rgba(10,10,10,0.6)]"
+                : "bg-transparent text-ink/70 hover:bg-white hover:text-ink"
             }`}
           >
-            <span className="text-base font-bold tracking-tight tabular-nums sm:text-lg">
+            <span className="text-lg font-extrabold tracking-[-0.04em] tabular-nums sm:text-xl">
               {a}
             </span>
             <span
@@ -152,7 +152,7 @@ export function PayProgress({
           <li key={label} className="flex min-w-0 flex-1 flex-col gap-1.5">
             <div
               className={`h-1 rounded-full transition-colors duration-300 ${
-                done || active ? "bg-ink" : "bg-fog"
+                done ? "bg-signal" : active ? "bg-ink" : "bg-fog"
               }`}
             />
             <span

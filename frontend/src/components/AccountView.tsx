@@ -75,7 +75,7 @@ function DetailRow({
   trailing?: React.ReactNode;
 }) {
   return (
-    <div className="flex items-start gap-3 rounded-2xl border border-fog/80 bg-paper/50 px-4 py-3.5">
+    <div className="flex items-start gap-3 rounded-[1.4rem] border border-fog/80 bg-paper/50 px-4 py-3.5">
       <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-graphite ring-1 ring-fog">
         {icon}
       </div>
@@ -151,7 +151,7 @@ function BalanceTile({
   logo?: React.ReactNode;
 }) {
   return (
-    <div className="rounded-2xl border border-fog/80 bg-white px-4 py-3.5">
+    <div className="card px-4 py-3.5">
       <div className="flex items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2">
           {logo}
@@ -247,7 +247,7 @@ function PendingBanner({
   href: string;
 }) {
   return (
-    <div className="flex items-start gap-3 rounded-2xl border border-amber/40 bg-amber/10 px-4 py-3.5">
+    <div className="flex items-start gap-3 rounded-[1.4rem] border border-amber/40 bg-amber/10 px-4 py-3.5">
       <span
         className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-amber"
         aria-hidden

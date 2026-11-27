@@ -34,7 +34,7 @@ function Credential({
 }) {
   return (
     <div
-      className={`passport-cred group/cred relative min-w-0 rounded-2xl border px-3 py-2.5 transition-colors duration-300 ${
+      className={`passport-cred group/cred relative min-w-0 rounded-[1.4rem] border px-3 py-2.5 transition-colors duration-300 ${
         linked
           ? "border-fog bg-white shadow-[0_10px_24px_-20px_rgba(10,10,10,0.35)]"
           : "border-dashed border-fog bg-paper/40"

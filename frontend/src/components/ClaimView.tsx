@@ -140,11 +140,11 @@ export function ClaimView({encoded}: {encoded: string}) {
         {error ? <ErrorBanner message={error} /> : null}
 
         {!armed ? (
-          <div className="rounded-2xl border border-fog bg-paper/70 px-4 py-3 text-sm text-graphite">
+          <div className="rounded-[1.4rem] border border-fog bg-paper/70 px-4 py-3 text-sm text-graphite">
             Scratch at least a third of the foil to start the claim.
           </div>
         ) : !isConnected ? (
-          <div className="space-y-3 rounded-2xl border border-fog bg-paper/70 px-4 py-4 text-center">
+          <div className="space-y-3 rounded-[1.4rem] border border-fog bg-paper/70 px-4 py-4 text-center">
             <p className="text-sm text-graphite">
               Prize revealed. Connect a Midnight wallet to receive the NIGHT.
             </p>
@@ -154,7 +154,7 @@ export function ClaimView({encoded}: {encoded: string}) {
             />
           </div>
         ) : done ? (
-          <div className="space-y-3 rounded-2xl border border-signal/20 bg-signal/5 px-4 py-4 text-center">
+          <div className="space-y-3 rounded-[1.4rem] border border-signal/20 bg-signal/5 px-4 py-4 text-center">
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-signal/10 text-signal">
               <CheckIcon className="h-6 w-6" />
             </div>

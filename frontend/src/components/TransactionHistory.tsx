@@ -91,7 +91,7 @@ export function TransactionHistory() {
       <div
         role="tablist"
         aria-label="History direction"
-        className="flex rounded-2xl border border-fog bg-paper/70 p-1"
+        className="flex rounded-[1.4rem] border border-fog bg-paper/70 p-1"
       >
         {(
           [
@@ -127,7 +127,7 @@ export function TransactionHistory() {
         })}
       </div>
 
-      <div className="overflow-x-auto rounded-2xl border border-fog bg-white">
+      <div className="overflow-x-auto card">
         {loading ? (
           <div className="flex justify-center py-10">
             <LoaderIcon className="h-5 w-5 animate-spin text-graphite" />

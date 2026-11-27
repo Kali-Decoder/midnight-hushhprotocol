@@ -434,7 +434,7 @@ export function SendForm({initialRecipient}: {initialRecipient?: string}) {
                     </p>
                   </div>
 
-                  <div className="rounded-2xl border border-fog bg-white px-5 py-5">
+                  <div className="card px-5 py-5">
                     <p className="flex min-w-0 items-center gap-2.5 text-4xl font-bold tracking-tight sm:text-5xl">
                       {recipientKind !== "email" ? (
                         <span
@@ -469,7 +469,7 @@ export function SendForm({initialRecipient}: {initialRecipient?: string}) {
                   <div
                     role="radiogroup"
                     aria-label="Recipient type"
-                    className="flex rounded-2xl border border-fog bg-paper/70 p-1"
+                    className="flex rounded-[1.4rem] border border-fog bg-paper/70 p-1"
                   >
                     {(
                       [
@@ -565,7 +565,7 @@ export function SendForm({initialRecipient}: {initialRecipient?: string}) {
                     <div
                       role="listbox"
                       aria-label="Recent recipients"
-                      className="overflow-hidden rounded-2xl border border-fog bg-white"
+                      className="overflow-hidden card"
                     >
                       <p className="border-b border-fog/80 px-4 py-2 text-[10px] font-medium uppercase tracking-[0.14em] text-graphite">
                         {recipient.trim() ? "Matches" : "Recent"}
@@ -620,7 +620,7 @@ export function SendForm({initialRecipient}: {initialRecipient?: string}) {
                   disabled={busy}
                 />
                 <div className="animate-soft-rise space-y-5 motion-reduce:animate-none">
-                <div className="rounded-2xl border border-fog bg-white px-4 py-3.5 sm:px-5">
+                <div className="card px-4 py-3.5 sm:px-5">
                   <div className="flex items-center gap-3 sm:gap-3.5">
                     <UserAvatar
                       address={resolved.wallet}
@@ -684,7 +684,7 @@ export function SendForm({initialRecipient}: {initialRecipient?: string}) {
                       Up to {amountDecimals} decimals
                     </p>
                   </div>
-                  <div className="rounded-2xl border border-fog bg-white px-4 py-5 transition-shadow duration-300 sm:px-5">
+                  <div className="card px-4 py-5 transition-shadow duration-300 sm:px-5">
                     <div className="flex items-center gap-2 sm:gap-3">
                       <button
                         type="button"
@@ -1001,7 +1001,7 @@ function PaymentStatusModal({
           ) : null}
 
           {failed ? (
-            <div className="space-y-3 rounded-2xl border border-amber/35 bg-amber/10 px-4 py-3.5">
+            <div className="space-y-3 rounded-[1.4rem] border border-amber/35 bg-amber/10 px-4 py-3.5">
               <p className="text-sm font-medium text-ink">
                 Payment needs attention.
               </p>

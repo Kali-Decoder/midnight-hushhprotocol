@@ -147,7 +147,7 @@ export function ScratchSendSuccessModal({
             {copied ? "Link copied" : "Copy claim link"}
           </button>
 
-          <div className="rounded-2xl border border-fog bg-paper/80 px-3.5 py-3">
+          <div className="rounded-[1.4rem] border border-fog bg-paper/80 px-3.5 py-3">
             <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-graphite">
               Claim link
             </p>

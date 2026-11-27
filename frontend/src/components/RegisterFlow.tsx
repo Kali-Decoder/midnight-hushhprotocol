@@ -161,7 +161,7 @@ function useNameAvailability(raw: string): Availability {
 /** Optional after claiming: link X and email so people can pay @handle. */
 function LinkSocialsNudge({username}: {username: string}) {
   return (
-    <div className="space-y-3 rounded-2xl border border-fog bg-paper/60 p-4">
+    <div className="space-y-3 rounded-[1.4rem] border border-fog bg-paper/60 p-4">
       <div>
         <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-graphite">
           Optional · do it now or later
@@ -422,7 +422,7 @@ function RegisterFlowInner({x}: {x: XIdentity}) {
                       </button>
                     </div>
                     <div
-                      className={`flex items-center rounded-2xl border bg-white px-4 py-3 transition-colors focus-within:border-ink ${
+                      className={`flex items-center rounded-[1.4rem] border bg-white px-4 py-3 transition-colors focus-within:border-ink ${
                         availability.state === "invalid"
                           ? "border-amber/60"
                           : availability.state === "taken"

@@ -159,7 +159,7 @@ export function DeployPanel() {
 function CopyBlock({label, value}: {label: string; value: string}) {
   const [copied, setCopied] = useState(false);
   return (
-    <div className="rounded-2xl border border-fog bg-white px-4 py-3">
+    <div className="card px-4 py-3">
       <div className="flex items-center justify-between gap-2">
         <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-graphite">{label}</p>
         <button

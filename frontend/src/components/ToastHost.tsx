@@ -99,7 +99,7 @@ export function ToastHost() {
           animate={{opacity: 1, y: 0, scale: 1}}
           exit={{opacity: 0, y: 10, scale: 0.96, transition: {duration: 0.18, ease: [0.4, 0, 1, 1]}}}
           transition={{type: "spring", stiffness: 380, damping: 30, mass: 0.8}}
-          className={`pointer-events-auto flex w-full max-w-md items-start gap-2.5 rounded-2xl border bg-white/95 px-4 py-3 text-sm shadow-lg shadow-ink/10 backdrop-blur-md ${
+          className={`pointer-events-auto flex w-full max-w-md items-start gap-2.5 rounded-[1.4rem] border bg-white/95 px-4 py-3 text-sm shadow-lg shadow-ink/10 backdrop-blur-md ${
             t.kind === "error" ? "border-red-200" : "border-fog"
           }`}
         >

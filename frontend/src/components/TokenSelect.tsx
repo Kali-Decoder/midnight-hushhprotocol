@@ -42,7 +42,7 @@ function TokenOptions({
     <ul
       role="listbox"
       aria-label="Pool tokens"
-      className="menu-spring overflow-hidden rounded-2xl border border-fog/90 bg-white/95 p-1.5 shadow-[0_18px_40px_-20px_rgba(10,10,10,0.35)] backdrop-blur-xl"
+      className="menu-spring overflow-hidden rounded-[1.4rem] border border-fog/90 bg-white/95 p-1.5 shadow-[0_18px_40px_-20px_rgba(10,10,10,0.35)] backdrop-blur-xl"
     >
       {options.map((opt) => {
         const selected =
@@ -175,7 +175,7 @@ export function TokenBalanceSelect({
   return (
     <div
       ref={root}
-      className={`relative overflow-visible rounded-2xl border border-fog bg-white ${className}`}
+      className={`relative overflow-visible card ${className}`}
     >
       <div className="flex items-center gap-3 px-4 py-3.5 sm:gap-4 sm:px-5">
         <button

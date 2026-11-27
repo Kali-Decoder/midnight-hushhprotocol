@@ -115,7 +115,7 @@ export function LookoutForm() {
       {status === "found" && user ? (
         <div
           key={`found-${resultKey}`}
-          className="sheet-spring space-y-5 rounded-2xl border border-fog bg-paper/50 p-5"
+          className="sheet-spring space-y-5 rounded-[1.4rem] border border-fog bg-paper/50 p-5"
         >
           <div className="flex items-center gap-4">
             <UserAvatar address={user.wallet} size="lg" showName />
@@ -142,7 +142,7 @@ export function LookoutForm() {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-fog/80 bg-white/80 px-4 py-3">
+          <div className="rounded-[1.4rem] border border-fog/80 bg-white/80 px-4 py-3">
             <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-graphite">
               Passport tip key
             </p>
@@ -184,7 +184,7 @@ export function LookoutForm() {
       {status === "missing" ? (
         <div
           key={`missing-${resultKey}`}
-          className="sheet-spring rounded-2xl border border-fog bg-paper/50 p-5"
+          className="sheet-spring rounded-[1.4rem] border border-fog bg-paper/50 p-5"
         >
           <p className="text-sm font-semibold tracking-tight text-ink">
             Not claimed
@@ -202,7 +202,7 @@ export function LookoutForm() {
       ) : null}
 
       {status === "idle" && !query ? (
-        <div className="rounded-[1.35rem] border border-dashed border-fog px-5 py-8 text-center">
+        <div className="card-dashed px-5 py-8 text-center">
           <p className="text-sm text-graphite">
             Enter a handle or email to check claim status.
           </p>

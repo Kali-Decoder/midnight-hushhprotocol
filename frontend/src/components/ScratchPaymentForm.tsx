@@ -305,7 +305,7 @@ export function ScratchPaymentForm() {
   // Visitors see the live preview; the form asks for a wallet / passport
   // only when they're ready to design and fund a card.
   const formFields = !isConnected ? (
-    <div className="space-y-4 rounded-2xl border border-dashed border-fog bg-paper/60 px-4 py-6 text-center">
+    <div className="card-dashed space-y-4 px-4 py-6 text-center">
       <p className="text-sm leading-relaxed text-graphite">
         Try the preview on the right. Connect a Midnight wallet when you&apos;re
         ready to design, fund and send a card.
@@ -313,7 +313,7 @@ export function ScratchPaymentForm() {
       <ConnectButton label="Connect wallet" />
     </div>
   ) : !isSignedIn ? (
-    <div className="space-y-4 rounded-2xl border border-dashed border-fog bg-paper/60 px-4 py-6 text-center">
+    <div className="card-dashed space-y-4 px-4 py-6 text-center">
       <p className="text-sm leading-relaxed text-graphite">
         Sign in so the encrypted gift card can land in their inbox.
       </p>
@@ -349,7 +349,7 @@ export function ScratchPaymentForm() {
             </div>
           </div>
           {recipientFocused && recentRecipients.length > 0 ? (
-            <div className="overflow-hidden rounded-2xl border border-fog bg-white shadow-[0_12px_28px_-20px_rgba(10,10,10,0.35)]">
+            <div className="overflow-hidden card shadow-[0_12px_28px_-20px_rgba(10,10,10,0.35)]">
               <p className="border-b border-fog/80 px-4 py-2 text-[10px] font-medium uppercase tracking-[0.14em] text-graphite">
                 Recent
               </p>
@@ -431,7 +431,7 @@ export function ScratchPaymentForm() {
                     setTheme(opt.id);
                     setPreviewRevealed(false);
                   }}
-                  className={`flex min-w-0 flex-col items-center gap-2 rounded-2xl border px-2 py-3 transition-all disabled:opacity-50 ${
+                  className={`flex min-w-0 flex-col items-center gap-2 rounded-[1.4rem] border px-2 py-3 transition-all disabled:opacity-50 ${
                     on
                       ? `border-ink bg-white shadow-[0_8px_20px_-14px_rgba(10,10,10,0.45)] ring-2 ${opt.ring}`
                       : "border-fog bg-white text-graphite hover:border-graphite"
@@ -485,7 +485,7 @@ export function ScratchPaymentForm() {
         </div>
       </FormSection>
 
-      <div className="rounded-2xl border border-fog bg-paper/70 px-3.5 py-3">
+      <div className="rounded-[1.4rem] border border-fog bg-paper/70 px-3.5 py-3">
         <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-graphite">
           Ready to send
         </p>
@@ -524,7 +524,7 @@ export function ScratchPaymentForm() {
       </button>
 
       {claimUrl && !busy ? (
-        <div className="rounded-2xl border border-fog bg-paper/80 px-3.5 py-3">
+        <div className="rounded-[1.4rem] border border-fog bg-paper/80 px-3.5 py-3">
           <div className="flex items-center justify-between gap-2">
             <p className="text-[10px] uppercase tracking-[0.14em] text-graphite">
               Claim link

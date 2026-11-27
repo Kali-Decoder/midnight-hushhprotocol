@@ -17,7 +17,7 @@ export function PaymentSharePreview({
     details.kind === "claimed" ? "PAYMENT CLAIMED" : "PAYMENT SENT";
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-fog bg-gradient-to-br from-[#f7f5f1] via-white to-[#efeae4] p-4 text-left">
+    <div className="overflow-hidden rounded-[1.4rem] border border-fog bg-gradient-to-br from-[#f7f5f1] via-white to-[#efeae4] p-4 text-left">
       <div className="flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2.5">
           {/* eslint-disable-next-line @next/next/no-img-element */}

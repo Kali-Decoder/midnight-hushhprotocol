@@ -15,9 +15,13 @@ export function AppChrome({children}: {children: ReactNode}) {
   const app = isAppShellPath(pathname);
   const landing = pathname === "/" || pathname === "/passport" || pathname === "/protocol";
   const studio = pathname.startsWith("/scratch");
+  // Full-bleed story landing: owns its own padding, backgrounds and footer.
+  const story = pathname === "/";
 
   const mainWidth = landing || studio ? "max-w-7xl" : "max-w-5xl";
-  const mainPad = studio
+  const mainPad = story
+    ? "w-full flex-1"
+    : studio
     ? "mx-auto w-full max-w-7xl flex-1 px-0 pb-10 pt-[4.75rem] sm:px-4 sm:pb-16 sm:pt-28"
     : app
       ? "mx-auto w-full max-w-5xl flex-1 px-0 pb-0 pt-[4.75rem] sm:px-4 sm:pb-16 sm:pt-28"
@@ -36,7 +40,7 @@ export function AppChrome({children}: {children: ReactNode}) {
       <SetupDock />
       <footer
         className={`mt-auto border-t border-fog/60 bg-transparent ${
-          app ? "hidden sm:block" : ""
+          story ? "hidden" : app ? "hidden sm:block" : ""
         }`}
       >
         <div

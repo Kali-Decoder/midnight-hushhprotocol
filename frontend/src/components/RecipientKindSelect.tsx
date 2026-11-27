@@ -76,7 +76,7 @@ export function RecipientKindSelect({
         <ul
           role="listbox"
           aria-label="Recipient type"
-          className="menu-spring absolute left-0 z-20 mt-2 flex flex-col gap-0.5 rounded-2xl border border-fog/90 bg-white/95 p-1.5 shadow-[0_18px_40px_-20px_rgba(10,10,10,0.35)] backdrop-blur-xl"
+          className="menu-spring absolute left-0 z-20 mt-2 flex flex-col gap-0.5 rounded-[1.4rem] border border-fog/90 bg-white/95 p-1.5 shadow-[0_18px_40px_-20px_rgba(10,10,10,0.35)] backdrop-blur-xl"
         >
           {OPTIONS.map((opt) => {
             const selected = value === opt;
